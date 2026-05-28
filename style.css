@@ -11,7 +11,7 @@ body, html {
     color: white;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     overflow: hidden;
-    overscroll-behavior: none; /* Mencegah pull-to-refresh di HP */
+    overscroll-behavior: none; 
 }
 
 #loading-screen {
@@ -131,6 +131,87 @@ button {
     backdrop-filter: blur(5px);
 }
 
+/* Desain UI Toggle Switch Cinematic Diperbarui */
+#cinematic-switch-container {
+    position: fixed;
+    top: 25px;
+    right: 25px;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column; /* Mengubah arah jadi menurun (kolom) */
+    align-items: flex-end; /* Rata kanan */
+    gap: 5px;
+    background: rgba(20, 20, 30, 0.75);
+    padding: 12px 18px;
+    border-radius: 20px;
+    border: 1px solid rgba(255, 179, 198, 0.3);
+    backdrop-filter: blur(8px);
+    transition: opacity 1s ease;
+}
+
+.switch-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.switch-label {
+    font-size: 1rem;
+    font-weight: bold;
+    color: #ffb3c6;
+    text-shadow: 0 0 10px rgba(255, 179, 198, 0.6);
+}
+
+.switch-desc {
+    font-size: 0.75rem;
+    color: #a0a0b0;
+    font-style: italic;
+    margin-right: 4px; /* Menyesuaikan posisi teks dengan tombol */
+}
+
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 46px;
+    height: 24px;
+}
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-color: #4a4e69;
+    transition: .4s;
+    border-radius: 24px;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 16px;
+    width: 16px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+}
+
+input:checked + .slider {
+    background-color: #ff4d6d;
+    box-shadow: 0 0 12px #ff4d6d;
+}
+
+input:checked + .slider:before {
+    transform: translateX(22px);
+}
+
 #canvas-container {
     width: 100vw;
     height: 100vh;
@@ -138,7 +219,6 @@ button {
     top: 0;
     left: 0;
     z-index: 1;
-    /* Fitur Sakti untuk HP */
     touch-action: none; 
     -webkit-touch-callout: none;
     user-select: none;

@@ -7,9 +7,11 @@ let bgStars;
 
 let isExploded = false;
 let isExploding = false;
-let isCinematic = false; 
+let isFastCinematic = false; 
+let isSlowCinematic = false; 
 let explosionProgress = 0;
-let canExplode = false; // Sensor penahan sentuhan HP
+let canExplode = false; 
+let cinematicTL; 
 
 // Elemen UI
 const loadingScreen = document.getElementById('loading-screen');
@@ -17,6 +19,8 @@ const questionModal = document.getElementById('question-modal');
 const clickHint = document.getElementById('click-hint');
 const btnYes = document.getElementById('btn-yes');
 const btnNo = document.getElementById('btn-no');
+const switchContainer = document.getElementById('cinematic-switch-container');
+const cinematicToggle = document.getElementById('cinematic-toggle');
 
 // --- 1. LOGIKA UI & TOMBOL ---
 
@@ -46,22 +50,32 @@ btnYes.addEventListener('click', (e) => {
         setTimeout(() => {
             if (!isExploding && !isExploded) {
                 clickHint.classList.remove('hidden');
-                canExplode = true; // Izinkan layar diketuk
+                canExplode = true; 
             }
         }, 1500);
     }, 500);
 });
 
-// Menggunakan pointerdown agar responsif sempurna di layar HP (Touch) maupun Mouse
 window.addEventListener('pointerdown', (e) => {
-    // Abaikan jika yang dipencet adalah tombol
-    if (e.target.tagName.toLowerCase() === 'button') return;
+    if (e.target.tagName.toLowerCase() === 'button' || e.target.tagName.toLowerCase() === 'input' || e.target.classList.contains('slider')) return;
 
     if (canExplode && solidPlanet && !isExploded && !isExploding) {
         clickHint.style.animation = 'none'; 
         clickHint.style.display = 'none';   
         isExploding = true; 
         canExplode = false;
+    }
+});
+
+// --- KONTROL SAKELAR (SWITCH) MANUAL ---
+cinematicToggle.addEventListener('change', (e) => {
+    if (e.target.checked) {
+        if (!isSlowCinematic && !isFastCinematic) startManualCinematic(); 
+    } else {
+        if (cinematicTL) cinematicTL.kill(); 
+        isFastCinematic = false;
+        isSlowCinematic = false;
+        controls.enabled = true; 
     }
 });
 
@@ -76,14 +90,10 @@ function init3DScene() {
     camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
     camera.position.z = 85; 
     camera.position.y = 30; 
-    scene.add(camera); 
 
     renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
-    
-    // RAHASIA HP ANTI-LAG: Batasi resolusi maksimal 2x lipat saja (sebelumnya HP bisa memaksakan 3x atau 4x sehingga patah-patah)
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); 
     container.appendChild(renderer.domElement);
 
     controls = new THREE.OrbitControls(camera, renderer.domElement);
@@ -92,9 +102,8 @@ function init3DScene() {
     controls.maxDistance = 250; 
     controls.minDistance = 15;
     
-    // PENGATURAN HP: Matikan fungsi geser paksa (pan) agar planet tidak nyasar saat HP disentuh dua jari
     controls.enablePan = false; 
-    controls.rotateSpeed = 0.7; // Putaran dihaluskan untuk layar sentuh
+    controls.rotateSpeed = 0.7; 
     controls.zoomSpeed = 1.2;
 
     createSolidPlanet();
@@ -114,7 +123,9 @@ function createSolidPlanet() {
     
     const wireGeo = new THREE.SphereGeometry(10.5, 16, 16);
     const wireMat = new THREE.MeshBasicMaterial({ color: 0xffb3c6, wireframe: true, transparent: true, opacity: 0.5 });
-    const wireSphere = new THREE.Mesh(wireGeo, wireMat);
+    
+    // PERBAIKAN TYPO DI SINI: new THREE.Mesh
+    const wireSphere = new THREE.Mesh(wireGeo, wireMat); 
     
     solidPlanet.add(wireSphere);
     scene.add(solidPlanet);
@@ -178,7 +189,7 @@ function createGreetingText() {
     canvas.height = 512; 
     const ctx = canvas.getContext('2d');
     
-    ctx.font = 'bold 95px "Brush Script MT", "Comic Sans MS", cursive, "Segoe UI", Arial';
+    ctx.font = 'bold 100px "Brush Script MT", "Comic Sans MS", cursive, "Segoe UI", Arial';
     ctx.fillStyle = '#ffffff';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
@@ -186,9 +197,9 @@ function createGreetingText() {
     ctx.shadowColor = '#ffb3c6';
     ctx.shadowBlur = 20;
     
-    const line1 = 'Alles Gute zum Geburtstag, Jen.';
-    const line2 = 'Gott segne dich.';
-    const line3 = 'Ich liebe dich so sehr.';
+    const line1 = 'Alles Gute zum Geburtstag, Jenita.';
+    const line2 = 'Gott segne dich immer.';
+    const line3 = 'Ich liebe dich unendlich.';
 
     for(let i = 0; i < 3; i++) {
         ctx.fillText(line1, 1024, 120);
@@ -207,11 +218,8 @@ function createGreetingText() {
     });
     
     greetingTextSprite = new THREE.Sprite(material);
-    
-    greetingTextSprite.scale.set(56, 14, 1); 
-    greetingTextSprite.position.set(0, 11, -40); 
-    
-    camera.add(greetingTextSprite); 
+    greetingTextSprite.position.set(0, 28, 0); 
+    scene.add(greetingTextSprite); 
 }
 
 function createCenterText() {
@@ -302,41 +310,54 @@ function onWindowResize() {
 }
 
 
-// --- 4. KOREOGRAFI KAMERA & WARP SPEED ---
-function startCinematicCamera() {
-    controls.enabled = false;
-    isCinematic = true; 
+// --- 4. KOREOGRAFI KAMERA ---
 
-    const tl = gsap.timeline({
-        onUpdate: () => {
-            camera.lookAt(0, 0, 0); 
-        },
+function startInitialCinematic() {
+    if (cinematicTL) cinematicTL.kill();
+    controls.enabled = false;
+    isFastCinematic = true; 
+    isSlowCinematic = false;
+    cinematicToggle.checked = true; 
+
+    cinematicTL = gsap.timeline({
+        onUpdate: () => camera.lookAt(0, 0, 0),
         onComplete: () => {
             controls.enabled = true; 
-            isCinematic = false; 
+            isFastCinematic = false; 
+            cinematicToggle.checked = false; 
         }
     });
 
-    tl.to(camera.position, { 
-        x: 0, y: 5, z: 15, 
-        duration: 3, 
-        ease: "power2.inOut" 
-    })
-    .to(camera.position, { 
-        x: -55, y: 15, z: 40, 
-        duration: 3, 
-        ease: "power1.inOut" 
-    })
-    .to(camera.position, { 
-        x: 55, y: 15, z: 40, 
-        duration: 4, 
-        ease: "power1.inOut" 
-    })
-    .to(camera.position, { 
-        x: 0, y: 35, z: 120, 
-        duration: 4, 
-        ease: "power2.inOut" 
+    cinematicTL.to(camera.position, { x: 0, y: 5, z: 15, duration: 3, ease: "power2.inOut" })
+      .to(camera.position, { x: -55, y: 15, z: 40, duration: 3, ease: "power1.inOut" })
+      .to(camera.position, { x: 55, y: 15, z: 40, duration: 4, ease: "power1.inOut" })
+      .to(camera.position, { x: 0, y: 35, z: 120, duration: 4, ease: "power2.inOut" })
+      .to(camera.position, { x: 0, y: 30, z: 85, duration: 3, ease: "power2.inOut" });
+}
+
+function startManualCinematic() {
+    if (cinematicTL) cinematicTL.kill();
+    controls.enabled = false;
+    isSlowCinematic = true; 
+    isFastCinematic = false;
+
+    cinematicTL = gsap.timeline({
+        onUpdate: () => camera.lookAt(0, 0, 0),
+        onComplete: () => {
+            if (cinematicToggle.checked) {
+                startManualCinematic(); 
+            } else {
+                controls.enabled = true; 
+                isSlowCinematic = false; 
+            }
+        }
     });
+
+    cinematicTL.to(camera.position, { x: 40, y: 10, z: 60, duration: 6, ease: "sine.inOut" }) 
+      .to(camera.position, { x: 0, y: -15, z: 50, duration: 6, ease: "sine.inOut" }) 
+      .to(camera.position, { x: -60, y: 25, z: 60, duration: 7, ease: "sine.inOut" }) 
+      .to(camera.position, { x: 0, y: 65, z: 40, duration: 7, ease: "sine.inOut" }) 
+      .to(camera.position, { x: 0, y: 30, z: 85, duration: 6, ease: "sine.inOut" }); 
 }
 
 
@@ -361,7 +382,9 @@ function animate() {
             
             if (solidPlanet) solidPlanet.visible = false; 
 
-            startCinematicCamera();
+            switchContainer.classList.remove('hidden');
+            
+            startInitialCinematic();
         }
 
         const ease = 1 - Math.pow(1 - explosionProgress, 4);
@@ -371,12 +394,7 @@ function animate() {
             sprite.position.x = sprite.userData.targetX * ease;
             sprite.position.y = sprite.userData.targetY * ease;
             sprite.position.z = sprite.userData.targetZ * ease;
-            
-            sprite.scale.set(
-                sprite.userData.targetScaleX * ease,
-                sprite.userData.targetScaleY * ease,
-                1
-            );
+            sprite.scale.set(sprite.userData.targetScaleX * ease, sprite.userData.targetScaleY * ease, 1);
         });
 
         ringParticleSystems.forEach(ps => {
@@ -392,22 +410,16 @@ function animate() {
         if (solidPlanet) {
             solidPlanet.scale.set(1 + ease * 3, 1 + ease * 3, 1 + ease * 3);
             solidPlanet.material.opacity = 1 - ease;
-            solidPlanet.children[0].material.opacity = (1 - ease) * 0.5;
+            if(solidPlanet.children[0]) solidPlanet.children[0].material.opacity = (1 - ease) * 0.5;
         }
 
         if (centerTextSprite) {
             centerTextSprite.material.opacity = ease;
         }
-
-        if (greetingTextSprite && explosionProgress > 0.3) {
-            greetingTextSprite.material.opacity = (explosionProgress - 0.3) / 0.7; 
-        }
     }
 
     if (isExploded || isExploding) {
-        if (coreParticleSystem) {
-            coreParticleSystem.rotation.y += 0.002;
-        }
+        if (coreParticleSystem) coreParticleSystem.rotation.y += 0.002;
 
         if (ringParticleSystems.length === 3) {
             ringParticleSystems[0].rotation.y -= 0.001; 
@@ -419,19 +431,24 @@ function animate() {
             ringParticleSystems[2].material.opacity = 0.3 + Math.abs(Math.sin(time * 0.2)) * 0.5;
         }
 
-        if (photoGroup) {
-            photoGroup.rotation.y -= 0.001; 
-        }
+        if (photoGroup) photoGroup.rotation.y -= 0.001; 
 
         if (greetingTextSprite && explosionProgress > 0.3) {
-            greetingTextSprite.position.y = 11 + Math.sin(time * 2) * 0.4;
-            greetingTextSprite.position.x = Math.cos(time * 1.5) * 0.4;
+            greetingTextSprite.material.opacity = (explosionProgress - 0.3) / 0.7; 
+            
+            greetingTextSprite.position.y = 28 + Math.sin(time * 2) * 1.5;
+            greetingTextSprite.position.x = Math.cos(time * 1.5) * 1.0;
             greetingTextSprite.material.rotation = Math.sin(time * 1.2) * 0.015;
+
+            const dist = camera.position.distanceTo(greetingTextSprite.position);
+            const scaleFactor = dist / 85; 
+            
+            greetingTextSprite.scale.set(120 * scaleFactor, 22 * scaleFactor, 1);
         }
     }
 
     if (bgStars) {
-        if (isCinematic) {
+        if (isFastCinematic) {
             const positions = bgStars.geometry.attributes.position.array;
             for(let i=0; i<positions.length; i+=3) {
                 positions[i+2] += 4.0; 
@@ -440,8 +457,17 @@ function animate() {
                 }
             }
             bgStars.geometry.attributes.position.needsUpdate = true;
+        } else if (isSlowCinematic) {
+            const positions = bgStars.geometry.attributes.position.array;
+            for(let i=0; i<positions.length; i+=3) {
+                positions[i+2] += 0.4; 
+                if (positions[i+2] > camera.position.z + 20) {
+                    positions[i+2] = camera.position.z - 200 - (Math.random() * 100);
+                }
+            }
+            bgStars.geometry.attributes.position.needsUpdate = true;
         } else {
-            bgStars.rotation.y += 0.0002;
+            bgStars.rotation.y += 0.0002; 
         }
     }
 
