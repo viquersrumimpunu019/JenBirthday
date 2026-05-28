@@ -11,6 +11,7 @@ body, html {
     color: white;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     overflow: hidden;
+    overscroll-behavior: none; /* Mencegah pull-to-refresh di HP */
 }
 
 #loading-screen {
@@ -137,6 +138,15 @@ button {
     top: 0;
     left: 0;
     z-index: 1;
+    /* Fitur Sakti untuk HP */
+    touch-action: none; 
+    -webkit-touch-callout: none;
+    user-select: none;
+}
+
+canvas {
+    display: block;
+    outline: none;
 }
 
 .hidden {

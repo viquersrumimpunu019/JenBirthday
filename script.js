@@ -1,14 +1,15 @@
 // Konfigurasi Dasar
 let scene, camera, renderer, controls;
 let photoGroup, solidPlanet, centerTextSprite, greetingTextSprite;
-const ringParticleSystems = []; // Partikel datar seperti cincin Saturnus
-let coreParticleSystem; // Partikel bulat tengah
-let bgStars; // Bintang background untuk efek Warp Speed
+const ringParticleSystems = []; 
+let coreParticleSystem; 
+let bgStars; 
 
 let isExploded = false;
 let isExploding = false;
-let isCinematic = false; // Deteksi kapan efek warp speed aktif
+let isCinematic = false; 
 let explosionProgress = 0;
+let canExplode = false; // Sensor penahan sentuhan HP
 
 // Elemen UI
 const loadingScreen = document.getElementById('loading-screen');
@@ -45,16 +46,22 @@ btnYes.addEventListener('click', (e) => {
         setTimeout(() => {
             if (!isExploding && !isExploded) {
                 clickHint.classList.remove('hidden');
+                canExplode = true; // Izinkan layar diketuk
             }
         }, 1500);
     }, 500);
 });
 
-window.addEventListener('click', () => {
-    if (solidPlanet && !isExploded && !isExploding) {
+// Menggunakan pointerdown agar responsif sempurna di layar HP (Touch) maupun Mouse
+window.addEventListener('pointerdown', (e) => {
+    // Abaikan jika yang dipencet adalah tombol
+    if (e.target.tagName.toLowerCase() === 'button') return;
+
+    if (canExplode && solidPlanet && !isExploded && !isExploding) {
         clickHint.style.animation = 'none'; 
         clickHint.style.display = 'none';   
         isExploding = true; 
+        canExplode = false;
     }
 });
 
@@ -67,23 +74,31 @@ function init3DScene() {
     scene = new THREE.Scene();
 
     camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-    camera.position.z = 85; // Awalnya sudah agak jauh
+    camera.position.z = 85; 
     camera.position.y = 30; 
     scene.add(camera); 
 
     renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setPixelRatio(window.devicePixelRatio);
+    
+    // RAHASIA HP ANTI-LAG: Batasi resolusi maksimal 2x lipat saja (sebelumnya HP bisa memaksakan 3x atau 4x sehingga patah-patah)
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    
     container.appendChild(renderer.domElement);
 
     controls = new THREE.OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.dampingFactor = 0.05;
-    controls.maxDistance = 250; // Izinkan zoom out lebih jauh
+    controls.maxDistance = 250; 
     controls.minDistance = 15;
+    
+    // PENGATURAN HP: Matikan fungsi geser paksa (pan) agar planet tidak nyasar saat HP disentuh dua jari
+    controls.enablePan = false; 
+    controls.rotateSpeed = 0.7; // Putaran dihaluskan untuk layar sentuh
+    controls.zoomSpeed = 1.2;
 
     createSolidPlanet();
-    createParticles(); // Sekarang bikin cincin Saturnus super tebal
+    createParticles(); 
     createGreetingText(); 
     createCenterText(); 
     createScatteredPhotos(); 
@@ -106,7 +121,6 @@ function createSolidPlanet() {
 }
 
 function createParticles() {
-    // 1. INTI PLANET (Bulat, 2000 partikel)
     const corePos = new Float32Array(2000 * 3);
     for(let i = 0; i < 2000; i++) {
         const r = 12 + (Math.random() * 3); 
@@ -124,17 +138,16 @@ function createParticles() {
     coreParticleSystem.visible = false; 
     scene.add(coreParticleSystem);
 
-    // 2. CINCIN SATURNUS (Datar meraksasa, dibikin 3 grup agar bisa kelap-kelip. Total 15.000 partikel)
     for (let g = 0; g < 3; g++) {
-        const ringCount = 5000; // 5000 per grup
+        const ringCount = 5000; 
         const ringPos = new Float32Array(ringCount * 3);
         for(let i = 0; i < ringCount; i++) {
             const angle = Math.random() * Math.PI * 2; 
-            const radius = 15 + Math.random() * 70; // Jarak sebaran cincin (lebar sekali)
+            const radius = 15 + Math.random() * 70; 
             
-            ringPos[i*3] = Math.cos(angle) * radius; // X
-            ringPos[i*3+1] = (Math.random() - 0.5) * 4; // Y (Sangat gepeng/datar seperti cincin)
-            ringPos[i*3+2] = Math.sin(angle) * radius; // Z
+            ringPos[i*3] = Math.cos(angle) * radius; 
+            ringPos[i*3+1] = (Math.random() - 0.5) * 4; 
+            ringPos[i*3+2] = Math.sin(angle) * radius; 
         }
         const ringGeo = new THREE.BufferGeometry();
         ringGeo.setAttribute('position', new THREE.BufferAttribute(ringPos, 3));
@@ -146,13 +159,12 @@ function createParticles() {
         ringParticleSystems.push(ringMesh);
     }
 
-    // 3. BINTANG BACKGROUND (Ditambah jadi 15.000 agar saat Warp Speed terasa kencang)
     const starGeo = new THREE.BufferGeometry();
     const starPos = new Float32Array(15000 * 3);
     for(let i=0; i<15000; i++) {
-        starPos[i*3] = (Math.random() - 0.5) * 400; // X lebar
-        starPos[i*3+1] = (Math.random() - 0.5) * 400; // Y tinggi
-        starPos[i*3+2] = (Math.random() - 0.5) * 400; // Z dalam
+        starPos[i*3] = (Math.random() - 0.5) * 400; 
+        starPos[i*3+1] = (Math.random() - 0.5) * 400; 
+        starPos[i*3+2] = (Math.random() - 0.5) * 400; 
     }
     starGeo.setAttribute('position', new THREE.BufferAttribute(starPos, 3));
     const starMat = new THREE.PointsMaterial({ color: 0xffffff, size: 0.15, transparent: true, opacity: 0.6 });
@@ -293,7 +305,7 @@ function onWindowResize() {
 // --- 4. KOREOGRAFI KAMERA & WARP SPEED ---
 function startCinematicCamera() {
     controls.enabled = false;
-    isCinematic = true; // Menyalakan efek bintang kencang (Warp Speed)
+    isCinematic = true; 
 
     const tl = gsap.timeline({
         onUpdate: () => {
@@ -301,29 +313,25 @@ function startCinematicCamera() {
         },
         onComplete: () => {
             controls.enabled = true; 
-            isCinematic = false; // Matikan warp speed setelah selesai
+            isCinematic = false; 
         }
     });
 
-    // 1. Zoom in ekstrim (menembus masuk)
     tl.to(camera.position, { 
         x: 0, y: 5, z: 15, 
         duration: 3, 
         ease: "power2.inOut" 
     })
-    // 2. Meliuk ke kiri (di dalam cincin)
     .to(camera.position, { 
         x: -55, y: 15, z: 40, 
         duration: 3, 
         ease: "power1.inOut" 
     })
-    // 3. Menyeberang ke kanan
     .to(camera.position, { 
         x: 55, y: 15, z: 40, 
         duration: 4, 
         ease: "power1.inOut" 
     })
-    // 4. Zoom out sangat jauh untuk melihat keindahan planet Saturnus penuh
     .to(camera.position, { 
         x: 0, y: 35, z: 120, 
         duration: 4, 
@@ -371,13 +379,11 @@ function animate() {
             );
         });
 
-        // Tumbuhkan Cincin Partikel Saturnus bersama foto
         ringParticleSystems.forEach(ps => {
             ps.visible = true;
             ps.scale.set(ease, ease, ease);
         });
         
-        // Tumbuhkan Partikel Inti Bulat
         if (coreParticleSystem) {
             coreParticleSystem.visible = true;
             coreParticleSystem.scale.set(ease, ease, ease);
@@ -399,14 +405,12 @@ function animate() {
     }
 
     if (isExploded || isExploding) {
-        // Rotasi Inti Planet
         if (coreParticleSystem) {
             coreParticleSystem.rotation.y += 0.002;
         }
 
-        // Rotasi Cincin Saturnus kelap-kelip
         if (ringParticleSystems.length === 3) {
-            ringParticleSystems[0].rotation.y -= 0.001; // Ikut arah foto
+            ringParticleSystems[0].rotation.y -= 0.001; 
             ringParticleSystems[1].rotation.y -= 0.0008;
             ringParticleSystems[2].rotation.y -= 0.0012;
 
@@ -419,7 +423,6 @@ function animate() {
             photoGroup.rotation.y -= 0.001; 
         }
 
-        // Efek Wobbly Tulisan HUD
         if (greetingTextSprite && explosionProgress > 0.3) {
             greetingTextSprite.position.y = 11 + Math.sin(time * 2) * 0.4;
             greetingTextSprite.position.x = Math.cos(time * 1.5) * 0.4;
@@ -427,21 +430,17 @@ function animate() {
         }
     }
 
-    // --- EFEK WARP SPEED (BINTANG MELESAT) ---
     if (bgStars) {
         if (isCinematic) {
-            // Tarik bintang kencang ke arah kamera (Z bertambah)
             const positions = bgStars.geometry.attributes.position.array;
             for(let i=0; i<positions.length; i+=3) {
-                positions[i+2] += 4.0; // Kecepatan melesat (makin besar makin ngebut)
-                // Jika bintang melewati belakang kamera, lempar lagi jauh ke depan
+                positions[i+2] += 4.0; 
                 if (positions[i+2] > camera.position.z + 20) {
                     positions[i+2] = camera.position.z - 200 - (Math.random() * 100);
                 }
             }
             bgStars.geometry.attributes.position.needsUpdate = true;
         } else {
-            // Rotasi bintang pelan dan normal saat tidak cinematic
             bgStars.rotation.y += 0.0002;
         }
     }
