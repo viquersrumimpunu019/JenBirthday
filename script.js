@@ -1,10 +1,18 @@
-// --- DAFTAR LAGU (GANTI NAMA FILE M4A-NYA DENGAN MILIKMU) ---
+// --- DAFTAR 10 LAGU (DARI FOLDER AUDIO & AUDIO2) ---
 const playlist = [
-    { title: "Memories", artist: "Maroon 5", src: "audio/maroon V - memories.mp3" },
-    { title: "Love Someone", artist: "Lukas Graham", src: "audio/love someone.mp3" },
-    { title: "Selamat Ulang Tahun", artist: "Jamrud", src: "audio/jamrud.mp3" },
-    { title: "Lagu Kenangan", artist: "Penyanyi Favorit", src: "audio/lagu_keempat.m4a" }, // Ganti nama lagu_keempat.m4a sesuai lagumu
-    { title: "Spesial Buat Kamu", artist: "Penyanyi Rahasia", src: "audio/lagu_kelima.m4a" } // Ganti nama lagu_kelima.m4a sesuai lagumu
+    // Dari folder pertama: audio
+    { title: "Selamat Ulang Tahun", artist: "Jamrud", src: "audio/Jamrud - Selamat Ulang Tahun.mp3" },
+    { title: "Love Someone", artist: "Lukas Graham", src: "audio/Love Someone - Lukas Graham.mp3" },
+    { title: "Memories", artist: "Maroon 5", src: "audio/Maroon V - Memories.mp3" },
+    { title: "Just the Way You Are", artist: "Bruno Mars", src: "audio/Just the Way You Are - Bruno Mars.m4a" },
+
+    // Dari folder kedua: audio2
+    { title: "Adore You", artist: "Harry Styles", src: "audio2/Adore You - Harry Styles.m4a" },
+    { title: "A Sky Full Of Stars", artist: "Coldplay", src: "audio2/Coldplay - A Sky Full Of Stars.mp3" },
+    { title: "I Want It That Way", artist: "Backstreet Boys", src: "audio2/I Want It That Way - Backstreet Boys.m4a" },
+    { title: "Perfect", artist: "Ed Sheeran", src: "audio2/Perfect - Ed Sheeran.m4a" },
+    { title: "Shape of My Heart", artist: "Backstreet Boys", src: "audio2/Shape of My Heart - Backstreet Boys.m4a" },
+    { title: "Thinking out Loud", artist: "Ed Sheeran", src: "audio2/Thinking out Loud - Ed Sheeran.m4a" }
 ];
 
 // Konfigurasi Dasar
@@ -53,7 +61,7 @@ const totalTimeEl = document.getElementById('total-time');
 let currentSongIndex = 0;
 let isPlaying = false;
 
-// --- 1. LOGIKA UI, ORIENTASI LAYAR, & MUSIC PLAYER ---
+// --- 1. LOGIKA UI & MUSIC PLAYER ---
 
 function formatTime(seconds) {
     if (isNaN(seconds)) return "0:00";
@@ -85,19 +93,23 @@ function pauseSong() {
 function nextSong() {
     currentSongIndex = (currentSongIndex + 1) % playlist.length;
     loadSong(currentSongIndex);
-    if (isPlaying) playSong();
+    if (isPlaying) {
+        setTimeout(() => playSong(), 50); 
+    }
 }
 
 function prevSong() {
     currentSongIndex = (currentSongIndex - 1 + playlist.length) % playlist.length;
     loadSong(currentSongIndex);
-    if (isPlaying) playSong();
+    if (isPlaying) {
+        setTimeout(() => playSong(), 50);
+    }
 }
 
 playBtn.addEventListener('click', () => isPlaying ? pauseSong() : playSong());
 nextBtn.addEventListener('click', nextSong);
 prevBtn.addEventListener('click', prevSong);
-bgmPlayer.addEventListener('ended', nextSong);
+bgmPlayer.addEventListener('ended', nextSong); 
 
 bgmPlayer.addEventListener('timeupdate', () => {
     const currentTime = bgmPlayer.currentTime;
@@ -493,7 +505,6 @@ function animate() {
             
             if (solidPlanet) solidPlanet.visible = false; 
 
-            // Munculkan Switch Cinematic & Music Player sekaligus!
             switchContainer.classList.remove('hidden');
             musicPlayerContainer.classList.remove('hidden');
             

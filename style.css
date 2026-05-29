@@ -138,6 +138,11 @@ input:checked + .slider:before { transform: translateX(22px); }
 .icon-btn { background: none; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: transform 0.2s; opacity: 0.9; }
 .icon-btn:hover { transform: scale(1.1); opacity: 1; }
 
+/* KODE PERBAIKAN: Mencegah Ikon/Gambar Menghalangi Klik Jari */
+.icon-btn svg, .icon-btn path {
+    pointer-events: none;
+}
+
 #canvas-container {
     width: 100vw; height: 100vh; position: absolute; top: 0; left: 0;
     z-index: 1; touch-action: none; -webkit-touch-callout: none; user-select: none;
