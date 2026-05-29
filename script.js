@@ -1,646 +1,168 @@
-// --- DAFTAR 10 LAGU ---
-const playlist = [
-    { title: "Selamat Ulang Tahun", artist: "Jamrud", src: "audio/jamrud.mp3" },
-    { title: "Love Someone", artist: "Lukas Graham", src: "audio/lovesomeone.mp3" },
-    { title: "Memories", artist: "Maroon 5", src: "audio/memories.mp3" },
-    { title: "Just the Way You Are", artist: "Bruno Mars", src: "audio/justthewayyouare.m4a" },
-    { title: "Adore You", artist: "Harry Styles", src: "audio2/adoreyou.m4a" },
-    { title: "A Sky Full Of Stars", artist: "Coldplay", src: "audio2/askyfullofstars.mp3" },
-    { title: "I Want It That Way", artist: "Backstreet Boys", src: "audio2/iwantitthatway.m4a" },
-    { title: "Perfect", artist: "Ed Sheeran", src: "audio2/perfect.m4a" },
-    { title: "Shape of My Heart", artist: "Backstreet Boys", src: "audio2/shapeofmyheart.m4a" },
-    { title: "Thinking out Loud", artist: "Ed Sheeran", src: "audio2/thinkingoutloud.m4a" }
-];
-
-// Konfigurasi Dasar
-let scene, camera, renderer, controls;
-let photoGroup, solidPlanet, centerTextSprite, greetingTextSprite;
-const ringParticleSystems = []; 
-const coreParticleSystems = []; 
-let bgStars; 
-
-let isExploded = false;
-let isExploding = false;
-let isFastCinematic = false; 
-let isSlowCinematic = false; 
-let explosionProgress = 0;
-let canExplode = false; 
-let cinematicTL; 
-let warningDismissed = false; 
-
-// Elemen UI
-const countdownScreen = document.getElementById('countdown-screen');
-const cdDays = document.getElementById('cd-days');
-const cdHours = document.getElementById('cd-hours');
-const cdMinutes = document.getElementById('cd-minutes');
-const cdSeconds = document.getElementById('cd-seconds');
-
-const landscapeWarning = document.getElementById('landscape-warning');
-const btnDismissWarning = document.getElementById('btn-dismiss-warning');
-const loadingScreen = document.getElementById('loading-screen');
-const questionModal = document.getElementById('question-modal');
-const clickHint = document.getElementById('click-hint');
-const btnYes = document.getElementById('btn-yes');
-const btnNo = document.getElementById('btn-no');
-const switchContainer = document.getElementById('cinematic-switch-container');
-const cinematicToggle = document.getElementById('cinematic-toggle');
-
-const musicPlayerContainer = document.getElementById('music-player-container');
-const explodeSound = document.getElementById('explode-sound');
-const bgmPlayer = document.getElementById('bgm-player');
-const songTitle = document.getElementById('song-title');
-const songArtist = document.getElementById('song-artist');
-const playBtn = document.getElementById('play-btn');
-const playIcon = document.getElementById('play-icon');
-const prevBtn = document.getElementById('prev-btn');
-const nextBtn = document.getElementById('next-btn');
-const muteBtn = document.getElementById('mute-btn');
-const volIcon = document.getElementById('vol-icon');
-const progressBar = document.getElementById('progress-bar');
-const currentTimeEl = document.getElementById('current-time');
-const totalTimeEl = document.getElementById('total-time');
-
-let currentSongIndex = 0;
-let isPlaying = false;
-
-// --- WAKTU GEMBOK (04 JUNI 2026, 00:01 WIB) ---
-// Format ISO +07:00 memastikan ini terkunci persis di jam WIB meskipun dia di luar negeri.
-const targetDate = new Date("2026-06-04T00:01:00+07:00").getTime();
-
-
-// --- 1. LOGIKA UI & MUSIC PLAYER ---
-
-function checkTimeAndStart() {
-    const now = new Date().getTime();
-    const distance = targetDate - now;
-
-    if (distance <= 0) {
-        // Waktu telah tiba! Matikan layar gembok
-        countdownScreen.style.display = 'none';
-        
-        // Mulai Loading Layar 7 Detik secara normal
-        setTimeout(() => {
-            loadingScreen.style.opacity = '0';
-            setTimeout(() => {
-                loadingScreen.style.display = 'none';
-                questionModal.classList.remove('hidden');
-            }, 1000);
-        }, 7000);
-
-    } else {
-        // Belum waktunya, tampilkan layar gembok
-        countdownScreen.style.display = 'flex';
-        
-        const timer = setInterval(() => {
-            const currentTime = new Date().getTime();
-            const dist = targetDate - currentTime;
-
-            if (dist <= 0) {
-                // Saat pas hitungan mundur di layar menyentuh angka nol
-                clearInterval(timer);
-                countdownScreen.style.opacity = '0';
-                setTimeout(() => {
-                    countdownScreen.style.display = 'none';
-                    checkTimeAndStart(); // Panggil ulang untuk memicu loading 7 detik
-                }, 1000);
-            } else {
-                const days = Math.floor(dist / (1000 * 60 * 60 * 24));
-                const hours = Math.floor((dist % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-                const minutes = Math.floor((dist % (1000 * 60 * 60)) / (1000 * 60));
-                const seconds = Math.floor((dist % (1000 * 60)) / 1000);
-
-                cdDays.innerText = days < 10 ? "0" + days : days;
-                cdHours.innerText = hours < 10 ? "0" + hours : hours;
-                cdMinutes.innerText = minutes < 10 ? "0" + minutes : minutes;
-                cdSeconds.innerText = seconds < 10 ? "0" + seconds : seconds;
-            }
-        }, 1000);
-    }
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
 }
 
-function formatTime(seconds) {
-    if (isNaN(seconds)) return "0:00";
-    const min = Math.floor(seconds / 60);
-    const sec = Math.floor(seconds % 60);
-    return `${min}:${sec < 10 ? '0' : ''}${sec}`;
+body, html {
+    width: 100%; height: 100%; background-color: #050510;
+    color: white; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    overflow: hidden; overscroll-behavior: none; 
 }
 
-function loadSong(index) {
-    const song = playlist[index];
-    songTitle.innerText = song.title;
-    songArtist.innerText = song.artist;
-    bgmPlayer.src = song.src;
-    bgmPlayer.load();
+/* --- LAYAR HITUNG MUNDUR (GEMBOK WAKTU) --- */
+#countdown-screen {
+    position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+    background-color: #050510; display: none; 
+    flex-direction: column; justify-content: center; align-items: center;
+    text-align: center; z-index: 30000; transition: opacity 1s ease;
 }
 
-function playSong() {
-    isPlaying = true;
-    bgmPlayer.play().catch(e => console.log("Auto-play dicegah:", e));
-    playIcon.innerHTML = `<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>`;
+#countdown-screen h2 { font-size: 2rem; color: #ffb3c6; margin-bottom: 10px; padding: 0 20px; }
+#countdown-screen p { font-size: 1rem; color: #e0e0e0; margin-bottom: 30px; font-style: italic; }
+
+.countdown-container {
+    display: flex; align-items: center; gap: 15px; background: rgba(30, 30, 35, 0.6);
+    padding: 20px 30px; border-radius: 20px; border: 1px solid rgba(255, 179, 198, 0.3);
+    box-shadow: 0 0 30px rgba(255, 179, 198, 0.2); backdrop-filter: blur(10px);
 }
 
-function pauseSong() {
-    isPlaying = false;
-    bgmPlayer.pause();
-    playIcon.innerHTML = `<path d="M8 5v14l11-7z"/>`;
+.time-box { display: flex; flex-direction: column; align-items: center; min-width: 65px; }
+.time-box span { font-size: 3rem; font-weight: bold; color: #ffffff; text-shadow: 0 0 15px rgba(255, 77, 109, 0.8); }
+.time-box p { font-size: 0.85rem !important; margin-bottom: 0 !important; color: #ffb3c6 !important; text-transform: uppercase; letter-spacing: 1px; font-style: normal !important;}
+.separator { font-size: 2.5rem; color: #a0a0b0; margin-bottom: 20px; }
+
+/* TOMBOL & MODAL ORDAL RAHASIA */
+#btn-ordal {
+    position: absolute; bottom: 15px; right: 20px;
+    background: none; border: none; color: rgba(255, 255, 255, 0.15); /* Sangat samar */
+    font-size: 0.75rem; cursor: pointer; z-index: 30001; transition: color 0.3s;
 }
+#btn-ordal:hover { color: rgba(255, 255, 255, 0.8); }
 
-function nextSong() {
-    currentSongIndex = (currentSongIndex + 1) % playlist.length;
-    loadSong(currentSongIndex);
-    if (isPlaying) { setTimeout(() => playSong(), 50); }
+#ordal-modal {
+    position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+    background-color: rgba(5, 5, 16, 0.9); backdrop-filter: blur(5px);
+    display: flex; justify-content: center; align-items: center;
+    z-index: 40000; transition: opacity 0.3s ease;
 }
-
-function prevSong() {
-    currentSongIndex = (currentSongIndex - 1 + playlist.length) % playlist.length;
-    loadSong(currentSongIndex);
-    if (isPlaying) { setTimeout(() => playSong(), 50); }
+#ordal-modal input {
+    display: block; width: 100%; padding: 12px; margin-bottom: 15px;
+    border-radius: 8px; border: 1px solid rgba(255, 179, 198, 0.5);
+    background: rgba(0,0,0,0.5); color: white; outline: none; text-align: center;
+    font-size: 1rem;
 }
+#btn-ordal-login { background: linear-gradient(45deg, #ff4d6d, #ff8fa3); color: white; }
+#btn-ordal-close { background: #4a4e69; color: white; }
 
-playBtn.addEventListener('click', () => isPlaying ? pauseSong() : playSong());
-nextBtn.addEventListener('click', nextSong);
-prevBtn.addEventListener('click', prevSong);
-bgmPlayer.addEventListener('ended', nextSong); 
-
-bgmPlayer.addEventListener('timeupdate', () => {
-    const currentTime = bgmPlayer.currentTime;
-    const duration = bgmPlayer.duration;
-    if (duration) {
-        progressBar.value = (currentTime / duration) * 100;
-        currentTimeEl.innerText = formatTime(currentTime);
-        totalTimeEl.innerText = "-" + formatTime(duration - currentTime); 
-    }
-});
-
-progressBar.addEventListener('input', (e) => {
-    const duration = bgmPlayer.duration;
-    if (duration) {
-        bgmPlayer.currentTime = (e.target.value / 100) * duration;
-    }
-});
-
-muteBtn.addEventListener('click', () => {
-    bgmPlayer.muted = !bgmPlayer.muted;
-    if (bgmPlayer.muted) {
-        volIcon.innerHTML = `<path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/>`;
-    } else {
-        volIcon.innerHTML = `<path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>`;
-    }
-});
-
-function checkOrientation() {
-    if (!warningDismissed && window.innerWidth <= 768 && window.innerHeight > window.innerWidth) {
-        landscapeWarning.classList.remove('hidden');
-    } else {
-        landscapeWarning.classList.add('hidden');
-    }
+/* Desain Peringatan Landscape */
+#landscape-warning {
+    position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+    background-color: rgba(5, 5, 16, 0.95); backdrop-filter: blur(10px);
+    display: flex; justify-content: center; align-items: center;
+    z-index: 20000; transition: opacity 0.5s ease;
 }
+.warning-content { background: rgba(20, 20, 30, 0.9); padding: 30px; border-radius: 15px; border: 1px solid rgba(255, 179, 198, 0.5); text-align: center; max-width: 85%; box-shadow: 0 0 30px rgba(255, 179, 198, 0.2); }
+.warning-content h2 { font-size: 1.5rem; color: #ffb3c6; margin-bottom: 10px; }
+.warning-content p { font-size: 1rem; color: #e0e0e0; margin-bottom: 20px; }
+.phone-icon { font-size: 4rem; margin-bottom: 15px; display: inline-block; animation: tiltPhone 2.5s infinite ease-in-out; }
+#btn-dismiss-warning { background: #4a4e69; color: white; padding: 10px 20px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; }
 
-// EKSEKUSI PERTAMA KALI WEB DIBUKA
-window.addEventListener('load', () => {
-    checkOrientation(); 
-    loadSong(currentSongIndex); 
+/* Layar Loading */
+#loading-screen {
+    position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+    background-color: #050510; display: flex; flex-direction: column;
+    justify-content: center; align-items: center; text-align: center;
+    z-index: 10000; transition: opacity 1s ease-out;
+}
+#loading-screen h1 { font-size: 3rem; color: #ffb3c6; text-shadow: 0 0 20px rgba(255, 179, 198, 0.6); margin-bottom: 10px; }
+#loading-screen .subtitle { font-size: 1.2rem; margin-bottom: 30px; color: #e0e0e0; }
+#loading-screen .wait { font-size: 1rem; font-style: italic; color: #a0a0b0; animation: pulse 1.5s infinite; }
+.landscape-note { margin-top: 35px; font-size: 0.95rem; color: #ffb3c6; background: rgba(255, 179, 198, 0.1); padding: 12px 25px; border-radius: 20px; border: 1px solid rgba(255, 179, 198, 0.3); max-width: 80%; line-height: 1.5; animation: pulseHint 2.5s infinite; backdrop-filter: blur(5px); }
+.enjoy-text { margin-top: 20px; font-size: 1.3rem; font-weight: bold; color: #ffffff; letter-spacing: 2px; text-shadow: 0 0 10px rgba(255, 255, 255, 0.5); }
+
+/* Modal Pertanyaan */
+#question-modal {
+    position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+    background-color: rgba(5, 5, 16, 0.8); backdrop-filter: blur(5px);
+    display: flex; justify-content: center; align-items: center;
+    z-index: 9000; transition: opacity 0.5s ease;
+}
+.modal-content { background: rgba(20, 20, 30, 0.9); padding: 30px 40px; border-radius: 15px; border: 1px solid rgba(255, 179, 198, 0.3); text-align: center; box-shadow: 0 0 30px rgba(255, 179, 198, 0.2); }
+.modal-content p { font-size: 1.3rem; margin-bottom: 25px; font-weight: bold; }
+.buttons { display: flex; gap: 15px; justify-content: center; position: relative; }
+button { padding: 10px 20px; border: none; border-radius: 8px; font-size: 1rem; cursor: pointer; font-weight: bold; transition: transform 0.2s; }
+#btn-yes { background: linear-gradient(45deg, #ff4d6d, #ff8fa3); color: white; box-shadow: 0 0 15px rgba(255, 77, 109, 0.5); }
+#btn-no { background: #4a4e69; color: white; }
+
+#click-hint { position: fixed; bottom: 20%; width: 100%; text-align: center; z-index: 500; pointer-events: none; transition: opacity 0.5s ease; animation: pulseHint 1.5s infinite; }
+#click-hint h3 { font-size: 1.2rem; color: #ffb3c6; text-shadow: 0 0 15px rgba(255, 179, 198, 0.8); padding: 10px 25px; border: 2px solid rgba(255, 179, 198, 0.5); border-radius: 30px; display: inline-block; background: rgba(20, 20, 30, 0.7); backdrop-filter: blur(5px); }
+
+/* --- UI CINEMATIC SWITCH --- */
+#cinematic-switch-container { position: fixed; top: 25px; right: 25px; z-index: 1000; display: flex; flex-direction: column; align-items: flex-end; gap: 5px; background: rgba(30, 30, 35, 0.6); padding: 12px 18px; border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.1); backdrop-filter: blur(8px); transition: opacity 1s ease; }
+.switch-header { display: flex; align-items: center; gap: 12px; }
+.switch-label { font-size: 1rem; font-weight: bold; color: #fff; }
+.switch-desc { font-size: 0.75rem; color: #a0a0b0; font-style: italic; margin-right: 4px; }
+.switch { position: relative; display: inline-block; width: 46px; height: 24px; }
+.switch input { opacity: 0; width: 0; height: 0; }
+.slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #4a4e69; transition: .4s; border-radius: 24px; }
+.slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
+input:checked + .slider { background-color: #ff4d6d; box-shadow: 0 0 12px #ff4d6d; }
+input:checked + .slider:before { transform: translateX(22px); }
+
+/* --- UI MUSIC PLAYER --- */
+#music-player-container { position: fixed; bottom: 25px; left: 25px; z-index: 1000; width: 280px; background: rgba(30, 30, 35, 0.6); backdrop-filter: blur(8px); border-radius: 15px; padding: 15px 18px; border: 1px solid rgba(255, 255, 255, 0.1); display: flex; flex-direction: column; gap: 10px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5); transition: opacity 1s ease, transform 1s ease; }
+.player-header { display: flex; justify-content: space-between; align-items: center; }
+.song-info h4 { font-size: 0.95rem; color: #ffffff; margin-bottom: 2px; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 180px; }
+.song-info p { font-size: 0.75rem; color: #b0b0b0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 180px; }
+.progress-area { display: flex; flex-direction: column; gap: 4px; }
+#progress-bar { -webkit-appearance: none; width: 100%; height: 4px; background: #4a4e69; border-radius: 5px; outline: none; cursor: pointer; }
+#progress-bar::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 10px; height: 10px; border-radius: 50%; background: #ffffff; cursor: pointer; box-shadow: 0 0 5px rgba(255,255,255,0.5); }
+.time-info { display: flex; justify-content: space-between; font-size: 0.7rem; color: #a0a0b0; }
+.player-controls { display: flex; justify-content: center; align-items: center; gap: 20px; }
+.icon-btn { background: none; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: transform 0.2s; opacity: 0.9; }
+.icon-btn:hover { transform: scale(1.1); opacity: 1; }
+.icon-btn svg, .icon-btn path { pointer-events: none; }
+#play-btn svg { width: 32px; height: 32px; }
+#prev-btn svg, #next-btn svg { width: 24px; height: 24px; }
+#mute-btn svg { width: 20px; height: 20px; }
+
+#canvas-container { width: 100vw; height: 100vh; position: absolute; top: 0; left: 0; z-index: 1; touch-action: none; -webkit-touch-callout: none; user-select: none; }
+canvas { display: block; outline: none; }
+.hidden { opacity: 0 !important; pointer-events: none; transform: translateY(20px); }
+
+@keyframes pulse { 0%, 100% { opacity: 0.4; } 50% { opacity: 1; } }
+@keyframes pulseHint { 0%, 100% { opacity: 0.5; transform: scale(1); } 50% { opacity: 1; transform: scale(1.05); } }
+@keyframes tiltPhone { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(-90deg); } }
+
+/* =========================================================
+   RESPONSIF SUPER COMPACT UNTUK HP
+   ========================================================= */
+@media (max-width: 850px) and (max-height: 500px), (max-width: 768px) {
+    #music-player-container { width: 200px; padding: 8px 12px; bottom: 12px; left: 12px; gap: 6px; border-radius: 12px; }
+    #music-player-container.hidden { transform: translateY(20px); }
+    .song-info h4 { font-size: 0.8rem; max-width: 130px; }
+    .song-info p { font-size: 0.65rem; max-width: 130px; }
+    .time-info { font-size: 0.6rem; }
+    .player-controls { gap: 15px; }
+    #play-btn svg { width: 24px; height: 24px; }
+    #prev-btn svg, #next-btn svg { width: 16px; height: 16px; }
+    #mute-btn svg { width: 16px; height: 16px; }
     
-    // Alur diubah: Mulai dari Cek Gembok Waktu!
-    checkTimeAndStart();
-});
+    #cinematic-switch-container { padding: 6px 10px; top: 12px; right: 12px; gap: 2px; border-radius: 12px; }
+    .switch-header { gap: 8px; }
+    .switch-label { font-size: 0.8rem; }
+    .switch-desc { font-size: 0.6rem; margin-right: 2px; }
+    .switch { width: 34px; height: 18px; }
+    .slider:before { height: 12px; width: 12px; left: 3px; bottom: 3px; }
+    input:checked + .slider:before { transform: translateX(16px); }
 
-btnDismissWarning.addEventListener('click', () => {
-    warningDismissed = true;
-    landscapeWarning.classList.add('hidden');
-});
-
-btnNo.addEventListener('mouseover', function() {
-    const randomX = Math.floor(Math.random() * 200) - 100;
-    const randomY = Math.floor(Math.random() * 100) - 50;
-    this.style.transform = `translate(${randomX}px, ${randomY}px)`;
-});
-
-btnYes.addEventListener('click', (e) => {
-    e.stopPropagation(); 
-    questionModal.style.opacity = '0';
+    /* Responsif Hitung Mundur HP */
+    #countdown-screen h2 { font-size: 1.5rem; }
+    .countdown-container { gap: 10px; padding: 15px 20px; }
+    .time-box span { font-size: 2rem; }
+    .time-box { min-width: 45px; }
+    .separator { font-size: 1.8rem; margin-bottom: 15px; }
     
-    playSong();
-
-    setTimeout(() => {
-        questionModal.style.display = 'none';
-        init3DScene(); 
-        
-        setTimeout(() => {
-            if (!isExploding && !isExploded) {
-                clickHint.classList.remove('hidden');
-                canExplode = true; 
-            }
-        }, 1500);
-    }, 500);
-});
-
-window.addEventListener('pointerdown', (e) => {
-    if (e.target.tagName.toLowerCase() === 'button' || 
-        e.target.tagName.toLowerCase() === 'input' || 
-        e.target.closest('#music-player-container') ||
-        e.target.closest('#cinematic-switch-container') ||
-        e.target.closest('#landscape-warning') ||
-        e.target.closest('#countdown-screen')) return;
-
-    if (canExplode && solidPlanet && !isExploded && !isExploding) {
-        clickHint.style.animation = 'none'; 
-        clickHint.style.display = 'none';   
-        
-        isExploding = true; 
-        canExplode = false;
-
-        if (explodeSound) {
-            explodeSound.volume = 0.8;
-            explodeSound.play().catch(err => console.log("Audio dicegah:", err));
-        }
-    }
-});
-
-cinematicToggle.addEventListener('change', (e) => {
-    if (e.target.checked) {
-        if (!isSlowCinematic && !isFastCinematic) startManualCinematic(); 
-    } else {
-        if (cinematicTL) cinematicTL.kill(); 
-        isFastCinematic = false;
-        isSlowCinematic = false;
-        controls.enabled = true; 
-    }
-});
-
-
-// --- 2. LOGIKA THREE.JS (DUNIA 3D) ---
-
-function init3DScene() {
-    const container = document.getElementById('canvas-container');
-
-    scene = new THREE.Scene();
-
-    camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-    camera.position.z = 85; 
-    camera.position.y = 30; 
-
-    renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); 
-    container.appendChild(renderer.domElement);
-
-    controls = new THREE.OrbitControls(camera, renderer.domElement);
-    controls.enableDamping = true;
-    controls.dampingFactor = 0.05;
-    controls.maxDistance = 250; 
-    controls.minDistance = 15;
-    controls.enablePan = false; 
-    controls.rotateSpeed = 0.7; 
-    controls.zoomSpeed = 1.2;
-
-    createSolidPlanet();
-    createParticles(); 
-    createGreetingText(); 
-    createCenterText(); 
-    createScatteredPhotos(); 
-
-    window.addEventListener('resize', onWindowResize, false);
-    animate();
-}
-
-function createSolidPlanet() {
-    const geo = new THREE.SphereGeometry(10, 32, 32);
-    const mat = new THREE.MeshBasicMaterial({ color: 0x8a2be2, transparent: true, opacity: 1 });
-    solidPlanet = new THREE.Mesh(geo, mat);
-    
-    const wireGeo = new THREE.SphereGeometry(10.5, 16, 16);
-    const wireMat = new THREE.MeshBasicMaterial({ color: 0xffb3c6, wireframe: true, transparent: true, opacity: 0.5 });
-    const wireSphere = new THREE.Mesh(wireGeo, wireMat);
-    
-    solidPlanet.add(wireSphere);
-    scene.add(solidPlanet);
-}
-
-function createParticles() {
-    for (let g = 0; g < 5; g++) {
-        const coreCount = 400; 
-        const corePos = new Float32Array(coreCount * 3);
-        for(let i = 0; i < coreCount; i++) {
-            const r = 12 + (Math.random() * 3); 
-            const theta = 2 * Math.PI * Math.random();
-            const phi = Math.acos(2 * Math.random() - 1);
-            corePos[i*3] = r * Math.sin(phi) * Math.cos(theta); 
-            corePos[i*3+1] = r * Math.sin(phi) * Math.sin(theta); 
-            corePos[i*3+2] = r * Math.cos(phi); 
-        }
-        const coreGeo = new THREE.BufferGeometry();
-        coreGeo.setAttribute('position', new THREE.BufferAttribute(corePos, 3));
-        const coreMat = new THREE.PointsMaterial({ size: 0.2, color: 0xffb3c6, transparent: true, opacity: 0.8, blending: THREE.AdditiveBlending, depthWrite: false });
-        const coreMesh = new THREE.Points(coreGeo, coreMat);
-        coreMesh.scale.set(0.001, 0.001, 0.001); 
-        coreMesh.visible = false; 
-        scene.add(coreMesh);
-        coreParticleSystems.push(coreMesh);
-    }
-
-    for (let g = 0; g < 6; g++) {
-        const ringCount = 2500; 
-        const ringPos = new Float32Array(ringCount * 3);
-        for(let i = 0; i < ringCount; i++) {
-            const angle = Math.random() * Math.PI * 2; 
-            const radius = 15 + Math.random() * 70; 
-            
-            ringPos[i*3] = Math.cos(angle) * radius; 
-            ringPos[i*3+1] = (Math.random() - 0.5) * 4; 
-            ringPos[i*3+2] = Math.sin(angle) * radius; 
-        }
-        const ringGeo = new THREE.BufferGeometry();
-        ringGeo.setAttribute('position', new THREE.BufferAttribute(ringPos, 3));
-        const ringMat = new THREE.PointsMaterial({ size: 0.15 + (Math.random()*0.1), color: 0xcc66ff, transparent: true, opacity: 0.7, blending: THREE.AdditiveBlending, depthWrite: false });
-        const ringMesh = new THREE.Points(ringGeo, ringMat);
-        ringMesh.scale.set(0.001, 0.001, 0.001); 
-        ringMesh.visible = false; 
-        scene.add(ringMesh);
-        ringParticleSystems.push(ringMesh);
-    }
-
-    const starGeo = new THREE.BufferGeometry();
-    const starPos = new Float32Array(15000 * 3);
-    for(let i=0; i<15000; i++) {
-        starPos[i*3] = (Math.random() - 0.5) * 400; 
-        starPos[i*3+1] = (Math.random() - 0.5) * 400; 
-        starPos[i*3+2] = (Math.random() - 0.5) * 400; 
-    }
-    starGeo.setAttribute('position', new THREE.BufferAttribute(starPos, 3));
-    const starMat = new THREE.PointsMaterial({ color: 0xffffff, size: 0.15, transparent: true, opacity: 0.6 });
-    bgStars = new Points(starGeo, starMat);
-    scene.add(bgStars);
-}
-
-function createGreetingText() {
-    const canvas = document.createElement('canvas');
-    canvas.width = 2048; 
-    canvas.height = 512; 
-    const ctx = canvas.getContext('2d');
-    
-    ctx.font = 'bold 100px "Brush Script MT", "Comic Sans MS", cursive, "Segoe UI", Arial';
-    ctx.fillStyle = '#ffffff';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.shadowColor = '#ffb3c6';
-    ctx.shadowBlur = 20;
-    
-    const line1 = 'Alles Gute zum Geburtstag, Jenita.';
-    const line2 = 'Gott segne dich immer.';
-    const line3 = 'Ich liebe dich unendlich.';
-
-    for(let i = 0; i < 3; i++) {
-        ctx.fillText(line1, 1024, 120);
-        ctx.fillText(line2, 1024, 256); 
-        ctx.fillText(line3, 1024, 392);
-    }
-
-    const texture = new THREE.CanvasTexture(canvas);
-    texture.needsUpdate = true;
-    
-    const material = new THREE.SpriteMaterial({ map: texture, transparent: true, opacity: 0, depthWrite: false });
-    
-    greetingTextSprite = new THREE.Sprite(material);
-    greetingTextSprite.position.set(0, 28, 0); 
-    scene.add(greetingTextSprite); 
-}
-
-function createCenterText() {
-    const canvas = document.createElement('canvas');
-    canvas.width = 512;
-    canvas.height = 256;
-    const ctx = canvas.getContext('2d');
-    
-    ctx.font = 'bold 90px "Segoe UI", Arial';
-    ctx.fillStyle = '#ffffff';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.shadowColor = '#ffb3c6';
-    ctx.shadowBlur = 20;
-    
-    ctx.fillText('21 Y.O', 256, 128);
-    ctx.fillText('21 Y.O', 256, 128);
-    ctx.fillText('21 Y.O', 256, 128);
-
-    const texture = new THREE.CanvasTexture(canvas);
-    texture.needsUpdate = true;
-    const material = new THREE.SpriteMaterial({ map: texture, transparent: true, opacity: 0, depthTest: false, depthWrite: false });
-    
-    centerTextSprite = new THREE.Sprite(material);
-    centerTextSprite.scale.set(30, 15, 1); 
-    centerTextSprite.position.set(0, 0, 0.5); 
-    centerTextSprite.renderOrder = 999;
-    scene.add(centerTextSprite);
-}
-
-function createScatteredPhotos() {
-    photoGroup = new THREE.Group();
-    const textureLoader = new THREE.TextureLoader();
-    const totalPhotos = 20;
-    const duplicates = 20; 
-
-    const textures = [];
-    for (let i = 0; i < totalPhotos; i++) {
-        textures.push(textureLoader.load(`images/foto${i+1}.jpeg`));
-    }
-
-    for (let d = 0; d < duplicates; d++) {
-        for (let i = 0; i < totalPhotos; i++) {
-            const material = new THREE.SpriteMaterial({ map: textures[i], transparent: true, opacity: 0.9, depthWrite: false });
-            const sprite = new THREE.Sprite(material);
-
-            const angle = Math.random() * Math.PI * 2; 
-            const radius = 20 + Math.random() * 65; 
-            const yOffset = (Math.random() - 0.5) * 5; 
-
-            sprite.userData.targetX = Math.cos(angle) * radius;
-            sprite.userData.targetY = yOffset;
-            sprite.userData.targetZ = Math.sin(angle) * radius;
-
-            const randomScale = 1.2 + Math.random() * 3.0; 
-            sprite.userData.targetScaleX = randomScale * 0.75;
-            sprite.userData.targetScaleY = randomScale;
-
-            sprite.position.set(0, 0, 0);
-            sprite.scale.set(0, 0, 1); 
-
-            photoGroup.add(sprite);
-        }
-    }
-    
-    photoGroup.visible = false; 
-    scene.add(photoGroup);
-}
-
-function onWindowResize() {
-    checkOrientation(); 
-    camera.aspect = window.innerWidth / window.innerHeight;
-    camera.updateProjectionMatrix();
-    renderer.setSize(window.innerWidth, window.innerHeight);
-}
-
-
-// --- 4. KOREOGRAFI KAMERA ---
-
-function startInitialCinematic() {
-    if (cinematicTL) cinematicTL.kill();
-    controls.enabled = false;
-    isFastCinematic = true; 
-    isSlowCinematic = false;
-    cinematicToggle.checked = true; 
-
-    cinematicTL = gsap.timeline({
-        onUpdate: () => camera.lookAt(0, 0, 0),
-        onComplete: () => {
-            controls.enabled = true; 
-            isFastCinematic = false; 
-            cinematicToggle.checked = false; 
-        }
-    });
-
-    cinematicTL.to(camera.position, { x: 0, y: 5, z: 15, duration: 3, ease: "power2.inOut" })
-      .to(camera.position, { x: -55, y: 15, z: 40, duration: 3, ease: "power1.inOut" })
-      .to(camera.position, { x: 55, y: 15, z: 40, duration: 4, ease: "power1.inOut" })
-      .to(camera.position, { x: 0, y: 35, z: 120, duration: 4, ease: "power2.inOut" })
-      .to(camera.position, { x: 0, y: 30, z: 85, duration: 3, ease: "power2.inOut" });
-}
-
-function startManualCinematic() {
-    if (cinematicTL) cinematicTL.kill();
-    controls.enabled = false;
-    isSlowCinematic = true; 
-    isFastCinematic = false;
-
-    cinematicTL = gsap.timeline({
-        onUpdate: () => camera.lookAt(0, 0, 0),
-        onComplete: () => {
-            if (cinematicToggle.checked) {
-                startManualCinematic(); 
-            } else {
-                controls.enabled = true; 
-                isSlowCinematic = false; 
-            }
-        }
-    });
-
-    cinematicTL.to(camera.position, { x: 40, y: 10, z: 60, duration: 6, ease: "sine.inOut" }) 
-      .to(camera.position, { x: 0, y: -15, z: 50, duration: 6, ease: "sine.inOut" }) 
-      .to(camera.position, { x: -60, y: 25, z: 60, duration: 7, ease: "sine.inOut" }) 
-      .to(camera.position, { x: 0, y: 65, z: 40, duration: 7, ease: "sine.inOut" }) 
-      .to(camera.position, { x: 0, y: 30, z: 85, duration: 6, ease: "sine.inOut" }); 
-}
-
-
-// --- 5. LOOP ANIMASI UTAMA ---
-
-function animate() {
-    requestAnimationFrame(animate);
-    const time = Date.now() * 0.001; 
-
-    if (solidPlanet && !isExploded) {
-        solidPlanet.rotation.y += 0.005;
-        solidPlanet.rotation.x += 0.002;
-    }
-
-    if (isExploding) {
-        explosionProgress += 0.015; 
-        
-        if (explosionProgress >= 1) {
-            explosionProgress = 1;
-            isExploding = false;
-            isExploded = true; 
-            
-            if (solidPlanet) solidPlanet.visible = false; 
-
-            switchContainer.classList.remove('hidden');
-            musicPlayerContainer.classList.remove('hidden');
-            
-            startInitialCinematic();
-        }
-
-        const ease = 1 - Math.pow(1 - explosionProgress, 4);
-
-        photoGroup.visible = true; 
-        photoGroup.children.forEach(sprite => {
-            sprite.position.x = sprite.userData.targetX * ease;
-            sprite.position.y = sprite.userData.targetY * ease;
-            sprite.position.z = sprite.userData.targetZ * ease;
-            sprite.scale.set(sprite.userData.targetScaleX * ease, sprite.userData.targetScaleY * ease, 1);
-        });
-
-        ringParticleSystems.forEach(ps => {
-            ps.visible = true;
-            ps.scale.set(ease, ease, ease);
-        });
-        
-        coreParticleSystems.forEach(ps => {
-            ps.visible = true;
-            ps.scale.set(ease, ease, ease);
-        });
-
-        if (solidPlanet) {
-            solidPlanet.scale.set(1 + ease * 3, 1 + ease * 3, 1 + ease * 3);
-            solidPlanet.material.opacity = 1 - ease;
-            if(solidPlanet.children[0]) solidPlanet.children[0].material.opacity = (1 - ease) * 0.5;
-        }
-
-        if (centerTextSprite) {
-            centerTextSprite.material.opacity = ease;
-        }
-    }
-
-    if (isExploded || isExploding) {
-        coreParticleSystems.forEach((ps, index) => {
-            ps.rotation.y += 0.002 + (index * 0.0001); 
-            ps.material.opacity = 0.2 + Math.abs(Math.sin(time * (1.5 + index * 0.4) + index * 2)) * 0.8;
-        });
-
-        ringParticleSystems.forEach((ps, index) => {
-            ps.rotation.y -= 0.001 + (index * 0.0001); 
-            ps.material.opacity = 0.1 + Math.abs(Math.cos(time * (1.2 + index * 0.3) + index * 1.5)) * 0.7;
-        });
-
-        if (photoGroup) photoGroup.rotation.y -= 0.001; 
-
-        if (greetingTextSprite && explosionProgress > 0.3) {
-            greetingTextSprite.material.opacity = (explosionProgress - 0.3) / 0.7; 
-            
-            greetingTextSprite.position.y = 28 + Math.sin(time * 2) * 1.5;
-            greetingTextSprite.position.x = Math.cos(time * 1.5) * 1.0;
-            greetingTextSprite.material.rotation = Math.sin(time * 1.2) * 0.015;
-
-            const dist = camera.position.distanceTo(greetingTextSprite.position);
-            const scaleFactor = dist / 85; 
-            
-            greetingTextSprite.scale.set(120 * scaleFactor, 22 * scaleFactor, 1);
-        }
-    }
-
-    if (bgStars) {
-        if (isFastCinematic) {
-            const positions = bgStars.geometry.attributes.position.array;
-            for(let i=0; i<positions.length; i+=3) {
-                positions[i+2] += 4.0; 
-                if (positions[i+2] > camera.position.z + 20) {
-                    positions[i+2] = camera.position.z - 200 - (Math.random() * 100);
-                }
-            }
-            bgStars.geometry.attributes.position.needsUpdate = true;
-        } else if (isSlowCinematic) {
-            const positions = bgStars.geometry.attributes.position.array;
-            for(let i=0; i<positions.length; i+=3) {
-                positions[i+2] += 0.4; 
-                if (positions[i+2] > camera.position.z + 20) {
-                    positions[i+2] = camera.position.z - 200 - (Math.random() * 100);
-                }
-            }
-            bgStars.geometry.attributes.position.needsUpdate = true;
-        } else {
-            bgStars.rotation.y += 0.0002; 
-        }
-    }
-
-    controls.update(); 
-    renderer.render(scene, camera);
+    #btn-ordal { bottom: 10px; right: 10px; font-size: 0.65rem; }
 }
