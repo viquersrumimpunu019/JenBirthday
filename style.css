@@ -32,13 +32,27 @@ body, html {
 .time-box p { font-size: 0.85rem !important; margin-bottom: 0 !important; color: #ffb3c6 !important; text-transform: uppercase; letter-spacing: 1px; font-style: normal !important;}
 .separator { font-size: 2.5rem; color: #a0a0b0; margin-bottom: 20px; }
 
-/* TOMBOL & MODAL ORDAL RAHASIA */
+/* TOMBOL & MODAL ORDAL RAHASIA (DIBIKIN MENGGODA & MENGGANTUNG DI BAWAH) */
 #btn-ordal {
-    position: absolute; bottom: 15px; right: 20px;
-    background: none; border: none; color: rgba(255, 255, 255, 0.15); /* Sangat samar */
-    font-size: 0.75rem; cursor: pointer; z-index: 30001; transition: color 0.3s;
+    margin-top: 35px; 
+    background: rgba(255, 179, 198, 0.1);
+    border: 1px dashed rgba(255, 179, 198, 0.8); 
+    color: #ffb3c6;
+    padding: 12px 25px;
+    border-radius: 25px;
+    font-size: 0.95rem;
+    font-weight: bold;
+    cursor: pointer;
+    z-index: 30001;
+    transition: all 0.3s ease;
+    box-shadow: 0 0 15px rgba(255, 179, 198, 0.2);
+    letter-spacing: 1px;
 }
-#btn-ordal:hover { color: rgba(255, 255, 255, 0.8); }
+#btn-ordal:hover {
+    background: rgba(255, 179, 198, 0.3);
+    box-shadow: 0 0 25px rgba(255, 179, 198, 0.5);
+    transform: translateY(-2px); 
+}
 
 #ordal-modal {
     position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
@@ -163,6 +177,4 @@ canvas { display: block; outline: none; }
     .time-box span { font-size: 2rem; }
     .time-box { min-width: 45px; }
     .separator { font-size: 1.8rem; margin-bottom: 15px; }
-    
-    #btn-ordal { bottom: 10px; right: 10px; font-size: 0.65rem; }
 }
