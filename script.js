@@ -8,7 +8,7 @@ const playlist = [
 
     // Dari folder kedua: audio2
     { title: "Adore You", artist: "Harry Styles", src: "audio2/AdoreYou.m4a" },
-    { title: "A Sky Full Of Stars", artist: "Coldplay", src: "audio2/ASkyFullOfStars.m4a" },
+    { title: "A Sky Full Of Stars", artist: "Coldplay", src: "audio2/ASkyFullOfStars.mp3" },
     { title: "I Want It That Way", artist: "Backstreet Boys", src: "audio2/IWantItThatWay.m4a" },
     { title: "Perfect", artist: "Ed Sheeran", src: "audio2/Perfect.m4a" },
     { title: "Shape of My Heart", artist: "Backstreet Boys", src: "audio2/ShapeOfMyHeart.m4a" },
