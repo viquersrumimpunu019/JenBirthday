@@ -1,8 +1,17 @@
+// --- DAFTAR LAGU (GANTI NAMA FILE M4A-NYA DENGAN MILIKMU) ---
+const playlist = [
+    { title: "Memories", artist: "Maroon 5", src: "audio/maroon V - memories.mp3" },
+    { title: "Love Someone", artist: "Lukas Graham", src: "audio/love someone.mp3" },
+    { title: "Selamat Ulang Tahun", artist: "Jamrud", src: "audio/jamrud.mp3" },
+    { title: "Lagu Kenangan", artist: "Penyanyi Favorit", src: "audio/lagu_keempat.m4a" }, // Ganti nama lagu_keempat.m4a sesuai lagumu
+    { title: "Spesial Buat Kamu", artist: "Penyanyi Rahasia", src: "audio/lagu_kelima.m4a" } // Ganti nama lagu_kelima.m4a sesuai lagumu
+];
+
 // Konfigurasi Dasar
 let scene, camera, renderer, controls;
 let photoGroup, solidPlanet, centerTextSprite, greetingTextSprite;
 const ringParticleSystems = []; 
-let coreParticleSystem; 
+const coreParticleSystems = []; 
 let bgStars; 
 
 let isExploded = false;
@@ -12,8 +21,11 @@ let isSlowCinematic = false;
 let explosionProgress = 0;
 let canExplode = false; 
 let cinematicTL; 
+let warningDismissed = false; 
 
 // Elemen UI
+const landscapeWarning = document.getElementById('landscape-warning');
+const btnDismissWarning = document.getElementById('btn-dismiss-warning');
 const loadingScreen = document.getElementById('loading-screen');
 const questionModal = document.getElementById('question-modal');
 const clickHint = document.getElementById('click-hint');
@@ -22,16 +34,121 @@ const btnNo = document.getElementById('btn-no');
 const switchContainer = document.getElementById('cinematic-switch-container');
 const cinematicToggle = document.getElementById('cinematic-toggle');
 
-// --- 1. LOGIKA UI & TOMBOL ---
+// --- ELEMEN MUSIC PLAYER ---
+const musicPlayerContainer = document.getElementById('music-player-container');
+const explodeSound = document.getElementById('explode-sound');
+const bgmPlayer = document.getElementById('bgm-player');
+const songTitle = document.getElementById('song-title');
+const songArtist = document.getElementById('song-artist');
+const playBtn = document.getElementById('play-btn');
+const playIcon = document.getElementById('play-icon');
+const prevBtn = document.getElementById('prev-btn');
+const nextBtn = document.getElementById('next-btn');
+const muteBtn = document.getElementById('mute-btn');
+const volIcon = document.getElementById('vol-icon');
+const progressBar = document.getElementById('progress-bar');
+const currentTimeEl = document.getElementById('current-time');
+const totalTimeEl = document.getElementById('total-time');
+
+let currentSongIndex = 0;
+let isPlaying = false;
+
+// --- 1. LOGIKA UI, ORIENTASI LAYAR, & MUSIC PLAYER ---
+
+function formatTime(seconds) {
+    if (isNaN(seconds)) return "0:00";
+    const min = Math.floor(seconds / 60);
+    const sec = Math.floor(seconds % 60);
+    return `${min}:${sec < 10 ? '0' : ''}${sec}`;
+}
+
+function loadSong(index) {
+    const song = playlist[index];
+    songTitle.innerText = song.title;
+    songArtist.innerText = song.artist;
+    bgmPlayer.src = song.src;
+    bgmPlayer.load();
+}
+
+function playSong() {
+    isPlaying = true;
+    bgmPlayer.play().catch(e => console.log("Auto-play dicegah:", e));
+    playIcon.innerHTML = `<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>`;
+}
+
+function pauseSong() {
+    isPlaying = false;
+    bgmPlayer.pause();
+    playIcon.innerHTML = `<path d="M8 5v14l11-7z"/>`;
+}
+
+function nextSong() {
+    currentSongIndex = (currentSongIndex + 1) % playlist.length;
+    loadSong(currentSongIndex);
+    if (isPlaying) playSong();
+}
+
+function prevSong() {
+    currentSongIndex = (currentSongIndex - 1 + playlist.length) % playlist.length;
+    loadSong(currentSongIndex);
+    if (isPlaying) playSong();
+}
+
+playBtn.addEventListener('click', () => isPlaying ? pauseSong() : playSong());
+nextBtn.addEventListener('click', nextSong);
+prevBtn.addEventListener('click', prevSong);
+bgmPlayer.addEventListener('ended', nextSong);
+
+bgmPlayer.addEventListener('timeupdate', () => {
+    const currentTime = bgmPlayer.currentTime;
+    const duration = bgmPlayer.duration;
+    if (duration) {
+        progressBar.value = (currentTime / duration) * 100;
+        currentTimeEl.innerText = formatTime(currentTime);
+        totalTimeEl.innerText = "-" + formatTime(duration - currentTime); 
+    }
+});
+
+progressBar.addEventListener('input', (e) => {
+    const duration = bgmPlayer.duration;
+    if (duration) {
+        bgmPlayer.currentTime = (e.target.value / 100) * duration;
+    }
+});
+
+muteBtn.addEventListener('click', () => {
+    bgmPlayer.muted = !bgmPlayer.muted;
+    if (bgmPlayer.muted) {
+        volIcon.innerHTML = `<path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/>`;
+    } else {
+        volIcon.innerHTML = `<path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>`;
+    }
+});
+
+function checkOrientation() {
+    if (!warningDismissed && window.innerWidth <= 768 && window.innerHeight > window.innerWidth) {
+        landscapeWarning.classList.remove('hidden');
+    } else {
+        landscapeWarning.classList.add('hidden');
+    }
+}
 
 window.addEventListener('load', () => {
+    checkOrientation(); 
+    loadSong(currentSongIndex); 
+    
     setTimeout(() => {
         loadingScreen.style.opacity = '0';
         setTimeout(() => {
             loadingScreen.style.display = 'none';
             questionModal.classList.remove('hidden');
         }, 1000);
-    }, 3000);
+    }, 7000); 
+});
+
+btnDismissWarning.addEventListener('click', () => {
+    warningDismissed = true;
+    landscapeWarning.classList.add('hidden');
 });
 
 btnNo.addEventListener('mouseover', function() {
@@ -43,6 +160,9 @@ btnNo.addEventListener('mouseover', function() {
 btnYes.addEventListener('click', (e) => {
     e.stopPropagation(); 
     questionModal.style.opacity = '0';
+    
+    playSong();
+
     setTimeout(() => {
         questionModal.style.display = 'none';
         init3DScene(); 
@@ -57,17 +177,26 @@ btnYes.addEventListener('click', (e) => {
 });
 
 window.addEventListener('pointerdown', (e) => {
-    if (e.target.tagName.toLowerCase() === 'button' || e.target.tagName.toLowerCase() === 'input' || e.target.classList.contains('slider')) return;
+    if (e.target.tagName.toLowerCase() === 'button' || 
+        e.target.tagName.toLowerCase() === 'input' || 
+        e.target.closest('#music-player-container') ||
+        e.target.closest('#cinematic-switch-container') ||
+        e.target.closest('#landscape-warning')) return;
 
     if (canExplode && solidPlanet && !isExploded && !isExploding) {
         clickHint.style.animation = 'none'; 
         clickHint.style.display = 'none';   
+        
         isExploding = true; 
         canExplode = false;
+
+        if (explodeSound) {
+            explodeSound.volume = 0.8;
+            explodeSound.play().catch(err => console.log("Audio dicegah:", err));
+        }
     }
 });
 
-// --- KONTROL SAKELAR (SWITCH) MANUAL ---
 cinematicToggle.addEventListener('change', (e) => {
     if (e.target.checked) {
         if (!isSlowCinematic && !isFastCinematic) startManualCinematic(); 
@@ -101,7 +230,6 @@ function init3DScene() {
     controls.dampingFactor = 0.05;
     controls.maxDistance = 250; 
     controls.minDistance = 15;
-    
     controls.enablePan = false; 
     controls.rotateSpeed = 0.7; 
     controls.zoomSpeed = 1.2;
@@ -123,34 +251,36 @@ function createSolidPlanet() {
     
     const wireGeo = new THREE.SphereGeometry(10.5, 16, 16);
     const wireMat = new THREE.MeshBasicMaterial({ color: 0xffb3c6, wireframe: true, transparent: true, opacity: 0.5 });
-    
-    // PERBAIKAN TYPO DI SINI: new THREE.Mesh
-    const wireSphere = new THREE.Mesh(wireGeo, wireMat); 
+    const wireSphere = new THREE.Mesh(wireGeo, wireMat);
     
     solidPlanet.add(wireSphere);
     scene.add(solidPlanet);
 }
 
 function createParticles() {
-    const corePos = new Float32Array(2000 * 3);
-    for(let i = 0; i < 2000; i++) {
-        const r = 12 + (Math.random() * 3); 
-        const theta = 2 * Math.PI * Math.random();
-        const phi = Math.acos(2 * Math.random() - 1);
-        corePos[i*3] = r * Math.sin(phi) * Math.cos(theta); 
-        corePos[i*3+1] = r * Math.sin(phi) * Math.sin(theta); 
-        corePos[i*3+2] = r * Math.cos(phi); 
+    for (let g = 0; g < 5; g++) {
+        const coreCount = 400; 
+        const corePos = new Float32Array(coreCount * 3);
+        for(let i = 0; i < coreCount; i++) {
+            const r = 12 + (Math.random() * 3); 
+            const theta = 2 * Math.PI * Math.random();
+            const phi = Math.acos(2 * Math.random() - 1);
+            corePos[i*3] = r * Math.sin(phi) * Math.cos(theta); 
+            corePos[i*3+1] = r * Math.sin(phi) * Math.sin(theta); 
+            corePos[i*3+2] = r * Math.cos(phi); 
+        }
+        const coreGeo = new THREE.BufferGeometry();
+        coreGeo.setAttribute('position', new THREE.BufferAttribute(corePos, 3));
+        const coreMat = new THREE.PointsMaterial({ size: 0.2, color: 0xffb3c6, transparent: true, opacity: 0.8, blending: THREE.AdditiveBlending, depthWrite: false });
+        const coreMesh = new THREE.Points(coreGeo, coreMat);
+        coreMesh.scale.set(0.001, 0.001, 0.001); 
+        coreMesh.visible = false; 
+        scene.add(coreMesh);
+        coreParticleSystems.push(coreMesh);
     }
-    const coreGeo = new THREE.BufferGeometry();
-    coreGeo.setAttribute('position', new THREE.BufferAttribute(corePos, 3));
-    const coreMat = new THREE.PointsMaterial({ size: 0.2, color: 0xffb3c6, transparent: true, opacity: 0.8, blending: THREE.AdditiveBlending, depthWrite: false });
-    coreParticleSystem = new THREE.Points(coreGeo, coreMat);
-    coreParticleSystem.scale.set(0.001, 0.001, 0.001); 
-    coreParticleSystem.visible = false; 
-    scene.add(coreParticleSystem);
 
-    for (let g = 0; g < 3; g++) {
-        const ringCount = 5000; 
+    for (let g = 0; g < 6; g++) {
+        const ringCount = 2500; 
         const ringPos = new Float32Array(ringCount * 3);
         for(let i = 0; i < ringCount; i++) {
             const angle = Math.random() * Math.PI * 2; 
@@ -193,7 +323,6 @@ function createGreetingText() {
     ctx.fillStyle = '#ffffff';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    
     ctx.shadowColor = '#ffb3c6';
     ctx.shadowBlur = 20;
     
@@ -210,12 +339,7 @@ function createGreetingText() {
     const texture = new THREE.CanvasTexture(canvas);
     texture.needsUpdate = true;
     
-    const material = new THREE.SpriteMaterial({ 
-        map: texture, 
-        transparent: true, 
-        opacity: 0, 
-        depthWrite: false 
-    });
+    const material = new THREE.SpriteMaterial({ map: texture, transparent: true, opacity: 0, depthWrite: false });
     
     greetingTextSprite = new THREE.Sprite(material);
     greetingTextSprite.position.set(0, 28, 0); 
@@ -232,7 +356,6 @@ function createCenterText() {
     ctx.fillStyle = '#ffffff';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    
     ctx.shadowColor = '#ffb3c6';
     ctx.shadowBlur = 20;
     
@@ -242,19 +365,12 @@ function createCenterText() {
 
     const texture = new THREE.CanvasTexture(canvas);
     texture.needsUpdate = true;
-    const material = new THREE.SpriteMaterial({ 
-        map: texture, 
-        transparent: true, 
-        opacity: 0, 
-        depthTest: false, 
-        depthWrite: false 
-    });
+    const material = new THREE.SpriteMaterial({ map: texture, transparent: true, opacity: 0, depthTest: false, depthWrite: false });
     
     centerTextSprite = new THREE.Sprite(material);
     centerTextSprite.scale.set(30, 15, 1); 
     centerTextSprite.position.set(0, 0, 0.5); 
     centerTextSprite.renderOrder = 999;
-    
     scene.add(centerTextSprite);
 }
 
@@ -271,13 +387,7 @@ function createScatteredPhotos() {
 
     for (let d = 0; d < duplicates; d++) {
         for (let i = 0; i < totalPhotos; i++) {
-            const material = new THREE.SpriteMaterial({ 
-                map: textures[i], 
-                transparent: true,
-                opacity: 0.9,
-                depthWrite: false 
-            });
-            
+            const material = new THREE.SpriteMaterial({ map: textures[i], transparent: true, opacity: 0.9, depthWrite: false });
             const sprite = new THREE.Sprite(material);
 
             const angle = Math.random() * Math.PI * 2; 
@@ -304,6 +414,7 @@ function createScatteredPhotos() {
 }
 
 function onWindowResize() {
+    checkOrientation(); 
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
@@ -382,7 +493,9 @@ function animate() {
             
             if (solidPlanet) solidPlanet.visible = false; 
 
+            // Munculkan Switch Cinematic & Music Player sekaligus!
             switchContainer.classList.remove('hidden');
+            musicPlayerContainer.classList.remove('hidden');
             
             startInitialCinematic();
         }
@@ -402,10 +515,10 @@ function animate() {
             ps.scale.set(ease, ease, ease);
         });
         
-        if (coreParticleSystem) {
-            coreParticleSystem.visible = true;
-            coreParticleSystem.scale.set(ease, ease, ease);
-        }
+        coreParticleSystems.forEach(ps => {
+            ps.visible = true;
+            ps.scale.set(ease, ease, ease);
+        });
 
         if (solidPlanet) {
             solidPlanet.scale.set(1 + ease * 3, 1 + ease * 3, 1 + ease * 3);
@@ -419,17 +532,15 @@ function animate() {
     }
 
     if (isExploded || isExploding) {
-        if (coreParticleSystem) coreParticleSystem.rotation.y += 0.002;
+        coreParticleSystems.forEach((ps, index) => {
+            ps.rotation.y += 0.002 + (index * 0.0001); 
+            ps.material.opacity = 0.2 + Math.abs(Math.sin(time * (1.5 + index * 0.4) + index * 2)) * 0.8;
+        });
 
-        if (ringParticleSystems.length === 3) {
-            ringParticleSystems[0].rotation.y -= 0.001; 
-            ringParticleSystems[1].rotation.y -= 0.0008;
-            ringParticleSystems[2].rotation.y -= 0.0012;
-
-            ringParticleSystems[0].material.opacity = 0.3 + Math.abs(Math.sin(time * 0.5)) * 0.5;
-            ringParticleSystems[1].material.opacity = 0.3 + Math.abs(Math.cos(time * 0.3)) * 0.5;
-            ringParticleSystems[2].material.opacity = 0.3 + Math.abs(Math.sin(time * 0.2)) * 0.5;
-        }
+        ringParticleSystems.forEach((ps, index) => {
+            ps.rotation.y -= 0.001 + (index * 0.0001); 
+            ps.material.opacity = 0.1 + Math.abs(Math.cos(time * (1.2 + index * 0.3) + index * 1.5)) * 0.7;
+        });
 
         if (photoGroup) photoGroup.rotation.y -= 0.001; 
 

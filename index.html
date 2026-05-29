@@ -11,18 +11,35 @@
 </head>
 <body>
 
+    <audio id="explode-sound" src="audio/explode.mp3" preload="auto"></audio>
+    <audio id="bgm-player" preload="metadata"></audio>
+
+    <div id="landscape-warning" class="hidden">
+        <div class="warning-content">
+            <div class="phone-icon">📱</div>
+            <h2>Mode Landscape Disarankan</h2>
+            <p>Untuk pengalaman visual terbaik, mohon putar HP Anda ke posisi mendatar.</p>
+            <button id="btn-dismiss-warning">Lanjutkan Saja</button>
+        </div>
+    </div>
+
     <div id="loading-screen">
         <h1>Cie Ultahhh</h1>
         <p class="subtitle">A world shaped with love, just for you...</p>
         <p class="wait">sabar dikit yaak :3✨</p>
+        
+        <div class="landscape-note">
+            📱 Untuk pengalaman visual yang lebih maksimal, sangat disarankan memakai mode landscape (mendatar).
+        </div>
+        <p class="enjoy-text">Enjoy!</p>
     </div>
 
     <div id="question-modal" class="hidden">
         <div class="modal-content">
             <p>Welcome Ke Umur "Diatas 20 Club" Masih Mau Lanjut?</p>
             <div class="buttons">
-                <button id="btn-yes">Of course 😍</button>
-                <button id="btn-no">No way 🙄</button>
+                <button id="btn-yes">Iyo 😍</button>
+                <button id="btn-no">Nyanda 🙄</button>
             </div>
         </div>
     </div>
@@ -40,6 +57,38 @@
             </label>
         </div>
         <span class="switch-desc">(Cinematic ON/OFF)</span>
+    </div>
+
+    <div id="music-player-container" class="hidden">
+        <div class="player-header">
+            <div class="song-info">
+                <h4 id="song-title">Song title</h4>
+                <p id="song-artist">Singer name</p>
+            </div>
+            <button id="mute-btn" class="icon-btn">
+                <svg id="vol-icon" viewBox="0 0 24 24" width="24" height="24" fill="white"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
+            </button>
+        </div>
+        
+        <div class="progress-area">
+            <input type="range" id="progress-bar" min="0" max="100" value="0">
+            <div class="time-info">
+                <span id="current-time">0:00</span>
+                <span id="total-time">0:00</span>
+            </div>
+        </div>
+
+        <div class="player-controls">
+            <button id="prev-btn" class="icon-btn">
+                <svg viewBox="0 0 24 24" width="28" height="28" fill="white"><path d="M11 18V6l-8.5 6 8.5 6zm.5-6l8.5 6V6l-8.5 6z"/></svg>
+            </button>
+            <button id="play-btn" class="icon-btn">
+                <svg id="play-icon" viewBox="0 0 24 24" width="36" height="36" fill="white"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+            </button>
+            <button id="next-btn" class="icon-btn">
+                <svg viewBox="0 0 24 24" width="28" height="28" fill="white"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg>
+            </button>
+        </div>
     </div>
 
     <div id="canvas-container"></div>
