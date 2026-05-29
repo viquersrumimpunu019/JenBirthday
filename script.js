@@ -1,18 +1,15 @@
-// --- DAFTAR 10 LAGU (DISESUAIKAN DENGAN NAMA FILE TERBARU) ---
+// --- DAFTAR 10 LAGU ---
 const playlist = [
-    // Dari folder pertama: audio
-    { title: "Selamat Ulang Tahun", artist: "Jamrud", src: "audio/Jamrud.mp3" },
-    { title: "Love Someone", artist: "Lukas Graham", src: "audio/LoveSomeone.mp3" },
-    { title: "Memories", artist: "Maroon 5", src: "audio/Memories.mp3" },
-    { title: "Just the Way You Are", artist: "Bruno Mars", src: "audio/JustTheWayYouAre.m4a" },
-
-    // Dari folder kedua: audio2
-    { title: "Adore You", artist: "Harry Styles", src: "audio2/AdoreYou.m4a" },
-    { title: "A Sky Full Of Stars", artist: "Coldplay", src: "audio2/ASkyFullOfStars.mp3" },
-    { title: "I Want It That Way", artist: "Backstreet Boys", src: "audio2/IWantItThatWay.m4a" },
-    { title: "Perfect", artist: "Ed Sheeran", src: "audio2/Perfect.m4a" },
-    { title: "Shape of My Heart", artist: "Backstreet Boys", src: "audio2/ShapeOfMyHeart.m4a" },
-    { title: "Thinking out Loud", artist: "Ed Sheeran", src: "audio2/ThinkingOutLoud.m4a" }
+    { title: "Selamat Ulang Tahun", artist: "Jamrud", src: "audio/jamrud.mp3" },
+    { title: "Love Someone", artist: "Lukas Graham", src: "audio/lovesomeone.mp3" },
+    { title: "Memories", artist: "Maroon 5", src: "audio/memories.mp3" },
+    { title: "Just the Way You Are", artist: "Bruno Mars", src: "audio/justthewayyouare.m4a" },
+    { title: "Adore You", artist: "Harry Styles", src: "audio2/adoreyou.m4a" },
+    { title: "A Sky Full Of Stars", artist: "Coldplay", src: "audio2/askyfullofstars.mp3" },
+    { title: "I Want It That Way", artist: "Backstreet Boys", src: "audio2/iwantitthatway.m4a" },
+    { title: "Perfect", artist: "Ed Sheeran", src: "audio2/perfect.m4a" },
+    { title: "Shape of My Heart", artist: "Backstreet Boys", src: "audio2/shapeofmyheart.m4a" },
+    { title: "Thinking out Loud", artist: "Ed Sheeran", src: "audio2/thinkingoutloud.m4a" }
 ];
 
 // Konfigurasi Dasar
@@ -32,6 +29,12 @@ let cinematicTL;
 let warningDismissed = false; 
 
 // Elemen UI
+const countdownScreen = document.getElementById('countdown-screen');
+const cdDays = document.getElementById('cd-days');
+const cdHours = document.getElementById('cd-hours');
+const cdMinutes = document.getElementById('cd-minutes');
+const cdSeconds = document.getElementById('cd-seconds');
+
 const landscapeWarning = document.getElementById('landscape-warning');
 const btnDismissWarning = document.getElementById('btn-dismiss-warning');
 const loadingScreen = document.getElementById('loading-screen');
@@ -42,7 +45,6 @@ const btnNo = document.getElementById('btn-no');
 const switchContainer = document.getElementById('cinematic-switch-container');
 const cinematicToggle = document.getElementById('cinematic-toggle');
 
-// --- ELEMEN MUSIC PLAYER ---
 const musicPlayerContainer = document.getElementById('music-player-container');
 const explodeSound = document.getElementById('explode-sound');
 const bgmPlayer = document.getElementById('bgm-player');
@@ -61,7 +63,60 @@ const totalTimeEl = document.getElementById('total-time');
 let currentSongIndex = 0;
 let isPlaying = false;
 
+// --- WAKTU GEMBOK (04 JUNI 2026, 00:01 WIB) ---
+// Format ISO +07:00 memastikan ini terkunci persis di jam WIB meskipun dia di luar negeri.
+const targetDate = new Date("2026-06-04T00:01:00+07:00").getTime();
+
+
 // --- 1. LOGIKA UI & MUSIC PLAYER ---
+
+function checkTimeAndStart() {
+    const now = new Date().getTime();
+    const distance = targetDate - now;
+
+    if (distance <= 0) {
+        // Waktu telah tiba! Matikan layar gembok
+        countdownScreen.style.display = 'none';
+        
+        // Mulai Loading Layar 7 Detik secara normal
+        setTimeout(() => {
+            loadingScreen.style.opacity = '0';
+            setTimeout(() => {
+                loadingScreen.style.display = 'none';
+                questionModal.classList.remove('hidden');
+            }, 1000);
+        }, 7000);
+
+    } else {
+        // Belum waktunya, tampilkan layar gembok
+        countdownScreen.style.display = 'flex';
+        
+        const timer = setInterval(() => {
+            const currentTime = new Date().getTime();
+            const dist = targetDate - currentTime;
+
+            if (dist <= 0) {
+                // Saat pas hitungan mundur di layar menyentuh angka nol
+                clearInterval(timer);
+                countdownScreen.style.opacity = '0';
+                setTimeout(() => {
+                    countdownScreen.style.display = 'none';
+                    checkTimeAndStart(); // Panggil ulang untuk memicu loading 7 detik
+                }, 1000);
+            } else {
+                const days = Math.floor(dist / (1000 * 60 * 60 * 24));
+                const hours = Math.floor((dist % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const minutes = Math.floor((dist % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((dist % (1000 * 60)) / 1000);
+
+                cdDays.innerText = days < 10 ? "0" + days : days;
+                cdHours.innerText = hours < 10 ? "0" + hours : hours;
+                cdMinutes.innerText = minutes < 10 ? "0" + minutes : minutes;
+                cdSeconds.innerText = seconds < 10 ? "0" + seconds : seconds;
+            }
+        }, 1000);
+    }
+}
 
 function formatTime(seconds) {
     if (isNaN(seconds)) return "0:00";
@@ -93,17 +148,13 @@ function pauseSong() {
 function nextSong() {
     currentSongIndex = (currentSongIndex + 1) % playlist.length;
     loadSong(currentSongIndex);
-    if (isPlaying) {
-        setTimeout(() => playSong(), 50); 
-    }
+    if (isPlaying) { setTimeout(() => playSong(), 50); }
 }
 
 function prevSong() {
     currentSongIndex = (currentSongIndex - 1 + playlist.length) % playlist.length;
     loadSong(currentSongIndex);
-    if (isPlaying) {
-        setTimeout(() => playSong(), 50);
-    }
+    if (isPlaying) { setTimeout(() => playSong(), 50); }
 }
 
 playBtn.addEventListener('click', () => isPlaying ? pauseSong() : playSong());
@@ -145,17 +196,13 @@ function checkOrientation() {
     }
 }
 
+// EKSEKUSI PERTAMA KALI WEB DIBUKA
 window.addEventListener('load', () => {
     checkOrientation(); 
     loadSong(currentSongIndex); 
     
-    setTimeout(() => {
-        loadingScreen.style.opacity = '0';
-        setTimeout(() => {
-            loadingScreen.style.display = 'none';
-            questionModal.classList.remove('hidden');
-        }, 1000);
-    }, 7000); 
+    // Alur diubah: Mulai dari Cek Gembok Waktu!
+    checkTimeAndStart();
 });
 
 btnDismissWarning.addEventListener('click', () => {
@@ -193,7 +240,8 @@ window.addEventListener('pointerdown', (e) => {
         e.target.tagName.toLowerCase() === 'input' || 
         e.target.closest('#music-player-container') ||
         e.target.closest('#cinematic-switch-container') ||
-        e.target.closest('#landscape-warning')) return;
+        e.target.closest('#landscape-warning') ||
+        e.target.closest('#countdown-screen')) return;
 
     if (canExplode && solidPlanet && !isExploded && !isExploding) {
         clickHint.style.animation = 'none'; 
@@ -321,7 +369,7 @@ function createParticles() {
     }
     starGeo.setAttribute('position', new THREE.BufferAttribute(starPos, 3));
     const starMat = new THREE.PointsMaterial({ color: 0xffffff, size: 0.15, transparent: true, opacity: 0.6 });
-    bgStars = new THREE.Points(starGeo, starMat);
+    bgStars = new Points(starGeo, starMat);
     scene.add(bgStars);
 }
 
