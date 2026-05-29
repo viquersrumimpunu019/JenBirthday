@@ -5,7 +5,7 @@ const playlist = [
     { title: "Memories", artist: "Maroon 5", src: "audio/memories.mp3" },
     { title: "Just the Way You Are", artist: "Bruno Mars", src: "audio/justthewayyouare.m4a" },
     { title: "Adore You", artist: "Harry Styles", src: "audio2/adoreyou.m4a" },
-    { title: "A Sky Full Of Stars", artist: "Coldplay", src: "audio2/askyfullofstars.m4a" },
+    { title: "A Sky Full Of Stars", artist: "Coldplay", src: "audio2/askyfullofstars.mp3" },
     { title: "I Want It That Way", artist: "Backstreet Boys", src: "audio2/iwantitthatway.m4a" },
     { title: "Perfect", artist: "Ed Sheeran", src: "audio2/perfect.m4a" },
     { title: "Shape of My Heart", artist: "Backstreet Boys", src: "audio2/shapeofmyheart.m4a" },
