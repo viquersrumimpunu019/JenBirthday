@@ -1,15 +1,16 @@
 // --- DAFTAR 10 LAGU ---
+// --- DAFTAR 10 LAGU (SUDAH DISESUAIKAN DENGAN HURUF BESAR/KECIL DI GITHUB) ---
 const playlist = [
-    { title: "Selamat Ulang Tahun", artist: "Jamrud", src: "audio/jamrud.mp3" },
-    { title: "Love Someone", artist: "Lukas Graham", src: "audio/lovesomeone.mp3" },
-    { title: "Memories", artist: "Maroon 5", src: "audio/memories.mp3" },
-    { title: "Just the Way You Are", artist: "Bruno Mars", src: "audio/justthewayyouare.m4a" },
-    { title: "Adore You", artist: "Harry Styles", src: "audio2/adoreyou.m4a" },
-    { title: "A Sky Full Of Stars", artist: "Coldplay", src: "audio2/askyfullofstars.mp3" },
-    { title: "I Want It That Way", artist: "Backstreet Boys", src: "audio2/iwantitthatway.m4a" },
-    { title: "Perfect", artist: "Ed Sheeran", src: "audio2/perfect.m4a" },
-    { title: "Shape of My Heart", artist: "Backstreet Boys", src: "audio2/shapeofmyheart.m4a" },
-    { title: "Thinking out Loud", artist: "Ed Sheeran", src: "audio2/thinkingoutloud.m4a" }
+    { title: "Selamat Ulang Tahun", artist: "Jamrud", src: "audio/Jamrud.mp3" },
+    { title: "Love Someone", artist: "Lukas Graham", src: "audio/LoveSomeone.mp3" },
+    { title: "Memories", artist: "Maroon 5", src: "audio/Memories.mp3" },
+    { title: "Just the Way You Are", artist: "Bruno Mars", src: "audio/JustTheWayYouAre.m4a" },
+    { title: "Adore You", artist: "Harry Styles", src: "audio2/AdoreYou.m4a" },
+    { title: "A Sky Full Of Stars", artist: "Coldplay", src: "audio2/ASkyFullOfStars.mp3" },
+    { title: "I Want It That Way", artist: "Backstreet Boys", src: "audio2/IWantItThatWay.m4a" },
+    { title: "Perfect", artist: "Ed Sheeran", src: "audio2/Perfect.m4a" },
+    { title: "Shape of My Heart", artist: "Backstreet Boys", src: "audio2/ShapeOfMyHeart.m4a" },
+    { title: "Thinking out Loud", artist: "Ed Sheeran", src: "audio2/ThinkingOutLoud.m4a" }
 ];
 
 // Konfigurasi Dasar
