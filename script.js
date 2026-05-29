@@ -1,18 +1,18 @@
-// --- DAFTAR 10 LAGU (DARI FOLDER AUDIO & AUDIO2) ---
+// --- DAFTAR 10 LAGU (DISESUAIKAN DENGAN NAMA FILE TERBARU) ---
 const playlist = [
     // Dari folder pertama: audio
-    { title: "Selamat Ulang Tahun", artist: "Jamrud", src: "audio/Jamrud - Selamat Ulang Tahun.mp3" },
-    { title: "Love Someone", artist: "Lukas Graham", src: "audio/Love Someone - Lukas Graham.mp3" },
-    { title: "Memories", artist: "Maroon 5", src: "audio/Maroon V - Memories.mp3" },
-    { title: "Just the Way You Are", artist: "Bruno Mars", src: "audio/Just the Way You Are - Bruno Mars.m4a" },
+    { title: "Selamat Ulang Tahun", artist: "Jamrud", src: "audio/Jamrud.mp3" },
+    { title: "Love Someone", artist: "Lukas Graham", src: "audio/LoveSomeone.mp3" },
+    { title: "Memories", artist: "Maroon 5", src: "audio/Memories.mp3" },
+    { title: "Just the Way You Are", artist: "Bruno Mars", src: "audio/JustTheWayYouAre.m4a" },
 
     // Dari folder kedua: audio2
-    { title: "Adore You", artist: "Harry Styles", src: "audio2/Adore You - Harry Styles.m4a" },
-    { title: "A Sky Full Of Stars", artist: "Coldplay", src: "audio2/Coldplay - A Sky Full Of Stars.mp3" },
-    { title: "I Want It That Way", artist: "Backstreet Boys", src: "audio2/I Want It That Way - Backstreet Boys.m4a" },
-    { title: "Perfect", artist: "Ed Sheeran", src: "audio2/Perfect - Ed Sheeran.m4a" },
-    { title: "Shape of My Heart", artist: "Backstreet Boys", src: "audio2/Shape of My Heart - Backstreet Boys.m4a" },
-    { title: "Thinking out Loud", artist: "Ed Sheeran", src: "audio2/Thinking out Loud - Ed Sheeran.m4a" }
+    { title: "Adore You", artist: "Harry Styles", src: "audio2/AdoreYou.m4a" },
+    { title: "A Sky Full Of Stars", artist: "Coldplay", src: "audio2/ASkyFullOfStars.m4a" },
+    { title: "I Want It That Way", artist: "Backstreet Boys", src: "audio2/IWantItThatWay.m4a" },
+    { title: "Perfect", artist: "Ed Sheeran", src: "audio2/Perfect.m4a" },
+    { title: "Shape of My Heart", artist: "Backstreet Boys", src: "audio2/ShapeOfMyHeart.m4a" },
+    { title: "Thinking out Loud", artist: "Ed Sheeran", src: "audio2/ThinkingOutLoud.m4a" }
 ];
 
 // Konfigurasi Dasar
