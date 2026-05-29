@@ -1,4 +1,3 @@
-// --- DAFTAR 10 LAGU ---
 // --- DAFTAR 10 LAGU (SUDAH DISESUAIKAN DENGAN HURUF BESAR/KECIL DI GITHUB) ---
 const playlist = [
     { title: "Selamat Ulang Tahun", artist: "Jamrud", src: "audio/Jamrud.mp3" },
