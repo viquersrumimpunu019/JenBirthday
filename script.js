@@ -1,9 +1,9 @@
 const wishesData = [
-    { img: "images2/images2 (1).jpeg", text: "Selamat ulang tahun yang ke 21! Semoga bahagia selalu" },
-    { img: "images2/images2 (2).jpeg", text: "Panjang umur, sehat selalu ya!" },
-    { img: "images2/images2 (3).jpeg", text: "Wish you all the best! Stay awesome" },
-    { img: "images2/images2 (4).jpeg", text: "Semoga semua impianmu tercapai!" },
-    { img: "images2/images2 (5).jpeg", text: "Happy Birthday! GOD BLESS YOU, Imanuel." }
+    { img: "images2/images2(1).jpeg", text: "Selamat ulang tahun yang ke 21! Semoga bahagia selalu" },
+    { img: "images2/images2(2).jpeg", text: "Panjang umur, sehat selalu ya!" },
+    { img: "images2/images2(3).jpeg", text: "Wish you all the best! Stay awesome" },
+    { img: "images2/images2(4).jpeg", text: "Semoga semua impianmu tercapai!" },
+    { img: "images2/images2(5).jpeg", text: "Happy Birthday! GOD BLESS YOU, Imanuel." }
 ];
 
 const playlist = [
