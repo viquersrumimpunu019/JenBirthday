@@ -1,4 +1,3 @@
-// --- DAFTAR UCAPAN & FOTO ---
 const wishesData = [
     { img: "images2/images2 (1).jpeg", text: "Selamat ulang tahun yang ke 21! Semoga bahagia selalu" },
     { img: "images2/images2 (2).jpeg", text: "Panjang umur, sehat selalu ya!" },
@@ -7,7 +6,6 @@ const wishesData = [
     { img: "images2/images2 (5).jpeg", text: "Happy Birthday! GOD BLESS YOU, Imanuel." }
 ];
 
-// --- DAFTAR 10 LAGU ---
 const playlist = [
     { title: "Selamat Ulang Tahun", artist: "Jamrud", src: "audio/Jamrud.mp3" },
     { title: "Love Someone", artist: "Lukas Graham", src: "audio/LoveSomeone.mp3" },
@@ -21,7 +19,6 @@ const playlist = [
     { title: "Thinking out Loud", artist: "Ed Sheeran", src: "audio2/ThinkingOutLoud.m4a" }
 ];
 
-// Konfigurasi Dasar
 let scene, camera, renderer, controls;
 let photoGroup, solidPlanet, centerTextSprite, greetingTextSprite;
 const ringParticleSystems = []; 
@@ -38,7 +35,6 @@ let cinematicTL;
 let warningDismissed = false; 
 let countdownTimer;
 
-// Elemen UI
 const countdownScreen = document.getElementById('countdown-screen');
 const cdDays = document.getElementById('cd-days');
 const cdHours = document.getElementById('cd-hours');
@@ -58,15 +54,13 @@ const loadingScreen = document.getElementById('loading-screen');
 const questionModal = document.getElementById('question-modal');
 const clickHint = document.getElementById('click-hint');
 const btnYes = document.getElementById('btn-yes');
-const btnNo = document.getElementById('btn-no');
 
 const wishesScreen = document.getElementById('wishes-screen');
 const btnNextToPlanet = document.getElementById('btn-next-to-planet');
 
-// Elemen Layar Lilin
 const candleScreen = document.getElementById('candle-screen');
 const candleFlame = document.getElementById('candle-flame');
-const candleGlow = document.querySelector('.candle-glow');
+const candleGlow = document.getElementById('candle-glow');
 
 const switchContainer = document.getElementById('cinematic-switch-container');
 const cinematicToggle = document.getElementById('cinematic-toggle');
@@ -89,10 +83,7 @@ const totalTimeEl = document.getElementById('total-time');
 let currentSongIndex = 0;
 let isPlaying = false;
 
-// --- WAKTU GEMBOK (04 JUNI 2026, 00:01 WIB) ---
 const targetDate = new Date("2026-06-04T00:01:00+07:00").getTime();
-
-// --- 1. LOGIKA UI & MUSIC PLAYER ---
 
 function proceedToLoadingScreen() {
     setTimeout(() => {
@@ -140,7 +131,6 @@ function checkTimeAndStart() {
     }
 }
 
-// JALUR ORDAL
 btnOrdal.addEventListener('click', () => { ordalModal.classList.remove('hidden'); });
 btnOrdalClose.addEventListener('click', () => {
     ordalModal.classList.add('hidden');
@@ -237,12 +227,11 @@ function checkOrientation() {
     }
 }
 
-// EKSEKUSI PERTAMA KALI WEB DIBUKA
 window.addEventListener('load', () => {
     checkOrientation(); 
     loadSong(currentSongIndex); 
     
-    // RENDER DUNIA 3D DI BALIK LAYAR SEJAK AWAL AGAR TIDAK NGE-LAG NANTI
+    // Siapkan planet di belakang layar agar mulus
     init3DScene(); 
 
     checkTimeAndStart();
@@ -253,13 +242,7 @@ btnDismissWarning.addEventListener('click', () => {
     landscapeWarning.classList.add('hidden');
 });
 
-btnNo.addEventListener('mouseover', function() {
-    const randomX = Math.floor(Math.random() * 200) - 100;
-    const randomY = Math.floor(Math.random() * 100) - 50;
-    this.style.transform = `translate(${randomX}px, ${randomY}px)`;
-});
-
-// KETIKA KLIK "IYO 😍" -> MUNCUL 5 FOTO POLAROID
+// KLIK "IYO" -> MUNCUL 5 FOTO (TIDAK ADA LAGU)
 btnYes.addEventListener('click', (e) => {
     e.stopPropagation(); 
     questionModal.style.opacity = '0';
@@ -270,30 +253,28 @@ btnYes.addEventListener('click', (e) => {
     }, 500);
 });
 
-// KETIKA KLIK "LANJOOT" DARI LAYAR 5 FOTO -> MUNCUL LILIN & DOA
+// KLIK "LANJOOOTTT" -> MUNCUL LILIN (TIDAK ADA LAGU)
 btnNextToPlanet.addEventListener('click', () => {
     wishesScreen.style.opacity = '0';
 
     setTimeout(() => {
         wishesScreen.style.display = 'none';
-        candleScreen.classList.remove('hidden'); // Munculkan layar lilin
+        candleScreen.classList.remove('hidden');
     }, 800);
 });
 
-// KETIKA API LILIN DI KLIK/DITIUP -> PINDAH KE PLANET & LAGU MULAI
+// KLIK API LILIN -> GELAP 4 DETIK -> MUNCUL PLANET + LAGU BERPUTAR
 candleFlame.addEventListener('click', () => {
-    candleFlame.style.display = 'none'; // Matikan api
-    candleScreen.classList.add('blown-out'); // Gelapkan ruangan seketika
+    candleFlame.style.display = 'none'; 
+    candleScreen.classList.add('blown-out'); 
     if (candleGlow) candleGlow.style.display = 'none'; 
 
-    // Tunggu 4 Detik Dalam Gelap Dramatis!
     setTimeout(() => {
-        candleScreen.style.opacity = '0'; // Pudar perlahan ke 3D
+        candleScreen.style.opacity = '0'; 
         
-        // LAGU BARU DIPUTAR DI SINI BERSAMAAN MUNCULNYA DUNIA 3D!
+        // LAGU BARU DIPUTAR SAAT PLANET MUNCUL
         playSong();
 
-        // MUNCULKAN KANVAS 3D DENGAN HALUS
         const canvasContainer = document.getElementById('canvas-container');
         canvasContainer.style.opacity = '1';
         canvasContainer.style.pointerEvents = 'auto';
@@ -306,13 +287,10 @@ candleFlame.addEventListener('click', () => {
                 canExplode = true; 
             }
         }, 1500); 
-    }, 4000); // 4 detik menahan napas dalam gelap
+    }, 4000); 
 });
 
-
-// LEDAKAN PLANET
 window.addEventListener('pointerdown', (e) => {
-    // Mencegah planet meledak kalau klik UI lain
     if (e.target.tagName.toLowerCase() === 'button' || 
         e.target.tagName.toLowerCase() === 'input' || 
         e.target.closest('#music-player-container') ||
@@ -347,9 +325,6 @@ cinematicToggle.addEventListener('change', (e) => {
         controls.enabled = true; 
     }
 });
-
-
-// --- 2. LOGIKA THREE.JS (DUNIA 3D) ---
 
 function init3DScene() {
     const container = document.getElementById('canvas-container');
