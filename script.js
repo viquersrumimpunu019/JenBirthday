@@ -1,4 +1,13 @@
-// --- DAFTAR 10 LAGU (SUDAH DISESUAIKAN DENGAN HURUF BESAR/KECIL DI GITHUB) ---
+// --- DAFTAR UCAPAN & FOTO ---
+const wishesData = [
+    { img: "images2/images2 (1).jpeg", text: "Selamat ulang tahun yang ke 21! Semoga bahagia selalu" },
+    { img: "images2/images2 (2).jpeg", text: "Panjang umur, sehat selalu ya!" },
+    { img: "images2/images2 (3).jpeg", text: "Wish you all the best! Stay awesome" },
+    { img: "images2/images2 (4).jpeg", text: "Semoga semua impianmu tercapai!" },
+    { img: "images2/images2 (5).jpeg", text: "Happy Birthday! GOD BLESS YOU, Imanuel." }
+];
+
+// --- DAFTAR 10 LAGU ---
 const playlist = [
     { title: "Selamat Ulang Tahun", artist: "Jamrud", src: "audio/Jamrud.mp3" },
     { title: "Love Someone", artist: "Lukas Graham", src: "audio/LoveSomeone.mp3" },
@@ -27,7 +36,7 @@ let explosionProgress = 0;
 let canExplode = false; 
 let cinematicTL; 
 let warningDismissed = false; 
-let countdownTimer; // Variabel global untuk hitung mundur
+let countdownTimer;
 
 // Elemen UI
 const countdownScreen = document.getElementById('countdown-screen');
@@ -36,7 +45,6 @@ const cdHours = document.getElementById('cd-hours');
 const cdMinutes = document.getElementById('cd-minutes');
 const cdSeconds = document.getElementById('cd-seconds');
 
-// Elemen Ordal
 const btnOrdal = document.getElementById('btn-ordal');
 const ordalModal = document.getElementById('ordal-modal');
 const ordalUser = document.getElementById('ordal-user');
@@ -51,6 +59,15 @@ const questionModal = document.getElementById('question-modal');
 const clickHint = document.getElementById('click-hint');
 const btnYes = document.getElementById('btn-yes');
 const btnNo = document.getElementById('btn-no');
+
+const wishesScreen = document.getElementById('wishes-screen');
+const btnNextToPlanet = document.getElementById('btn-next-to-planet');
+
+// Elemen Layar Lilin
+const candleScreen = document.getElementById('candle-screen');
+const candleFlame = document.getElementById('candle-flame');
+const candleGlow = document.querySelector('.candle-glow');
+
 const switchContainer = document.getElementById('cinematic-switch-container');
 const cinematicToggle = document.getElementById('cinematic-toggle');
 
@@ -75,10 +92,8 @@ let isPlaying = false;
 // --- WAKTU GEMBOK (04 JUNI 2026, 00:01 WIB) ---
 const targetDate = new Date("2026-06-04T00:01:00+07:00").getTime();
 
-
 // --- 1. LOGIKA UI & MUSIC PLAYER ---
 
-// Fungsi helper untuk memulai layar loading (dipakai oleh timer dan jalur ordal)
 function proceedToLoadingScreen() {
     setTimeout(() => {
         loadingScreen.style.opacity = '0';
@@ -86,7 +101,7 @@ function proceedToLoadingScreen() {
             loadingScreen.style.display = 'none';
             questionModal.classList.remove('hidden');
         }, 1000);
-    }, 7000); // Tunggu 7 detik loading screen
+    }, 7000);
 }
 
 function checkTimeAndStart() {
@@ -125,27 +140,20 @@ function checkTimeAndStart() {
     }
 }
 
-// --- LOGIKA JALUR ORDAL ---
-btnOrdal.addEventListener('click', () => {
-    ordalModal.classList.remove('hidden');
-});
-
+// JALUR ORDAL
+btnOrdal.addEventListener('click', () => { ordalModal.classList.remove('hidden'); });
 btnOrdalClose.addEventListener('click', () => {
     ordalModal.classList.add('hidden');
-    ordalUser.value = '';
-    ordalPass.value = '';
+    ordalUser.value = ''; ordalPass.value = '';
 });
-
 btnOrdalLogin.addEventListener('click', () => {
     if (ordalUser.value === 'vikers123' && ordalPass.value === '191919') {
-        // Tembus! Matikan timer dan buang gemboknya
         clearInterval(countdownTimer);
         ordalModal.classList.add('hidden');
         countdownScreen.style.opacity = '0';
-        
         setTimeout(() => {
             countdownScreen.style.display = 'none';
-            proceedToLoadingScreen(); // Langsung masuk ke 7 detik loading screen
+            proceedToLoadingScreen();
         }, 1000);
     } else {
         alert('Teeeet! Username atau password salah 🤪');
@@ -153,7 +161,6 @@ btnOrdalLogin.addEventListener('click', () => {
 });
 
 
-// Format waktu lagu
 function formatTime(seconds) {
     if (isNaN(seconds)) return "0:00";
     const min = Math.floor(seconds / 60);
@@ -210,9 +217,7 @@ bgmPlayer.addEventListener('timeupdate', () => {
 
 progressBar.addEventListener('input', (e) => {
     const duration = bgmPlayer.duration;
-    if (duration) {
-        bgmPlayer.currentTime = (e.target.value / 100) * duration;
-    }
+    if (duration) { bgmPlayer.currentTime = (e.target.value / 100) * duration; }
 });
 
 muteBtn.addEventListener('click', () => {
@@ -236,6 +241,10 @@ function checkOrientation() {
 window.addEventListener('load', () => {
     checkOrientation(); 
     loadSong(currentSongIndex); 
+    
+    // RENDER DUNIA 3D DI BALIK LAYAR SEJAK AWAL AGAR TIDAK NGE-LAG NANTI
+    init3DScene(); 
+
     checkTimeAndStart();
 });
 
@@ -250,34 +259,69 @@ btnNo.addEventListener('mouseover', function() {
     this.style.transform = `translate(${randomX}px, ${randomY}px)`;
 });
 
+// KETIKA KLIK "IYO 😍" -> MUNCUL 5 FOTO POLAROID
 btnYes.addEventListener('click', (e) => {
     e.stopPropagation(); 
     questionModal.style.opacity = '0';
     
-    playSong();
-
     setTimeout(() => {
         questionModal.style.display = 'none';
-        init3DScene(); 
-        
-        setTimeout(() => {
-            if (!isExploding && !isExploded) {
-                clickHint.classList.remove('hidden');
-                canExplode = true; 
-            }
-        }, 1500);
+        wishesScreen.classList.remove('hidden');
     }, 500);
 });
 
+// KETIKA KLIK "LANJOOT" DARI LAYAR 5 FOTO -> MUNCUL LILIN & DOA
+btnNextToPlanet.addEventListener('click', () => {
+    wishesScreen.style.opacity = '0';
+
+    setTimeout(() => {
+        wishesScreen.style.display = 'none';
+        candleScreen.classList.remove('hidden'); // Munculkan layar lilin
+    }, 800);
+});
+
+// KETIKA API LILIN DI KLIK/DITIUP -> PINDAH KE PLANET & LAGU MULAI
+candleFlame.addEventListener('click', () => {
+    candleFlame.style.display = 'none'; // Matikan api
+    candleScreen.classList.add('blown-out'); // Gelapkan ruangan seketika
+    if (candleGlow) candleGlow.style.display = 'none'; 
+
+    // Tunggu 4 Detik Dalam Gelap Dramatis!
+    setTimeout(() => {
+        candleScreen.style.opacity = '0'; // Pudar perlahan ke 3D
+        
+        // LAGU BARU DIPUTAR DI SINI BERSAMAAN MUNCULNYA DUNIA 3D!
+        playSong();
+
+        // MUNCULKAN KANVAS 3D DENGAN HALUS
+        const canvasContainer = document.getElementById('canvas-container');
+        canvasContainer.style.opacity = '1';
+        canvasContainer.style.pointerEvents = 'auto';
+
+        setTimeout(() => {
+            candleScreen.style.display = 'none';
+            
+            if (!isExploded && !isExploding) {
+                clickHint.classList.remove('hidden');
+                canExplode = true; 
+            }
+        }, 1500); 
+    }, 4000); // 4 detik menahan napas dalam gelap
+});
+
+
+// LEDAKAN PLANET
 window.addEventListener('pointerdown', (e) => {
-    // Abaikan jika mencet UI atau modal ordal
+    // Mencegah planet meledak kalau klik UI lain
     if (e.target.tagName.toLowerCase() === 'button' || 
         e.target.tagName.toLowerCase() === 'input' || 
         e.target.closest('#music-player-container') ||
         e.target.closest('#cinematic-switch-container') ||
         e.target.closest('#landscape-warning') ||
         e.target.closest('#countdown-screen') ||
-        e.target.closest('#ordal-modal')) return;
+        e.target.closest('#ordal-modal') ||
+        e.target.closest('#wishes-screen') ||
+        e.target.closest('#candle-screen')) return; 
 
     if (canExplode && solidPlanet && !isExploded && !isExploding) {
         clickHint.style.animation = 'none'; 
